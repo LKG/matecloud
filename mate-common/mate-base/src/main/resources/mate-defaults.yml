@@ -1,0 +1,397 @@
+# ============================================================
+# MateCloud Framework Defaults  (packaged in mate-base.jar)
+# ============================================================
+# Framework-CONSTANT settings that do not change between environments.
+# Everything here has a safe value that works in every environment.
+#
+# Every service imports this via:
+#   spring:
+#     config:
+#       import:
+#         - classpath:mate-defaults.yml
+#
+# Env-SPECIFIC settings (MySQL URL, Redis host, Nacos password, ...)
+# live in Nacos as `mate-infra-${profile}.yml` — upload it via
+# `mate config init`.
+# ============================================================
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: false
+    banner-mode: off
+  autoconfigure:
+    exclude:
+      # ── Boot 3.x auto-configs incompatible with Boot 4.x ──
+      # These starters reference classes that moved packages in Boot 4.x.
+      # Exclude their auto-config and let mate-starters handle it manually.
+      - com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    dynamic:
+      # OFF by default → mate-ds-starter creates a single Druid datasource.
+      # Flip to true (+ configure spring.datasource.dynamic.datasource.* and
+      # mate.tenant.type=DATASOURCE/SCHEMA) to enable per-tenant DB routing.
+      enabled: false
+      primary: master
+
+  # ── Nacos connection (single source of truth) ──
+  # All Nacos params defined ONCE here; Spring Cloud + Dubbo both reference these.
+  cloud:
+    nacos:
+      server-addr: ${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+      username: ${NACOS_USERNAME:nacos}
+      # DEV-ONLY default (matches docker-compose). MUST be overridden in
+      # production via the NACOS_PASSWORD env var — never ship this value.
+      password: ${NACOS_PASSWORD:ckjia123}
+      # Dev namespace UUID — override via NACOS_NAMESPACE env var in production
+      namespace: ${NACOS_NAMESPACE:}
+      group: ${NACOS_GROUP:DEFAULT_GROUP}
+      discovery:
+        enabled: true
+        # NacosDiscoveryProperties does NOT inherit top-level namespace/group —
+        # must be explicitly set for service registration
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        ephemeral: true
+        metadata:
+          version: ${matecloud.version:1.0.0}
+          env: ${spring.profiles.active:dev}
+      config:
+        file-extension: yml
+        refresh-enabled: true
+        # Same: NacosConfigProperties does NOT inherit top-level namespace/group
+        namespace: ${NACOS_NAMESPACE:}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+
+  # ---- Jackson ----
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+      # record 原始类型组件 (int/boolean) 在请求体缺字段时映射为 0/false 而非 500
+      # (Jackson 3 默认 FAIL_ON_NULL_FOR_PRIMITIVES=true; 表单部分字段提交是常态)
+      fail-on-null-for-primitives: false
+    serialization:
+      fail-on-empty-beans: false
+      # write-dates-as-timestamps removed in Jackson 3.x (Boot 4.x)
+      # Date format is controlled by spring.jackson.date-format above
+
+  # ---- Servlet (multipart upload) ----
+  # 仅约束「单次整传」(走应用服务器);大文件(视频等)走分片直传,不经服务器、不受此限。
+  # 上限对齐素材单次整传最大类型(doc 50MB),避免出现「业务放行 / servlet 提前 413」的矛盾。
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 60MB
+      file-size-threshold: 10MB
+      resolve-lazily: true
+
+  # ---- Spring Web MVC ----
+  mvc:
+    throw-exception-if-no-handler-found: true
+
+  # ---- Web resources ----
+  web:
+    resources:
+      add-mappings: false
+
+  # ---- Flyway database migration ----
+  # PER-SERVICE HISTORY (pluggable rule): every service owns its OWN schema-history
+  # table `flyway_history_<module-code>`, so each service has an INDEPENDENT version
+  # line and there is NO global version coordination / collision (the old single
+  # shared `flyway_schema_history` made 1.x.y a global namespace — e.g. notice's
+  # V1.2.1 collided with system's V1.2.1). Each service MUST set `mate.module.code`
+  # (see docs/conventions/pluggable-module-guide.md). A service may number its
+  # migrations from V1 again; cross-collision is impossible across tables.
+  flyway:
+    enabled: true
+    # table name = flyway_history_<module-code>; `shared` fallback is intentionally
+    # ugly so a service that forgot to set mate.module.code is obvious.
+    table: flyway_history_${mate.module.code:shared}
+    # baseline-on-migrate stays true so a NEW service can bootstrap its history
+    # against the (non-empty) shared DB; existing services have their per-service
+    # table pre-seeded by scripts/flyway-split-history.sql on upgrade.
+    baseline-on-migrate: true
+    baseline-version: 0
+    # Safety restored: per-service tables remove the need for the old
+    # validate=false / out-of-order=true crutches that silently hid drift and
+    # version collisions. Each service's line is strictly ordered and validated.
+    validate-on-migrate: true
+    out-of-order: false
+    # Auto-clean failed migration entries on startup so a botched multi-statement
+    # DDL doesn't permanently brick boot. Successful versions are never touched.
+    repair-on-migrate: true
+    locations: classpath:db/migration
+
+# ── RPC mode ─────────────────────────────────────
+# dubbo = microservice mode (default), local = monolith mode
+mate:
+  rpc:
+    mode: ${MATE_RPC_MODE:dubbo}
+
+# ============================================================
+# Dubbo RPC — framework defaults
+# ============================================================
+# Dubbo reuses spring.cloud.nacos.* properties for registry address.
+# Credentials go in URL query; namespace as registry attribute.
+# Env vars: NACOS_HOST, NACOS_PORT, NACOS_USERNAME, NACOS_PASSWORD, NACOS_NAMESPACE
+# ============================================================
+dubbo:
+  application:
+    name: ${spring.application.name}-dubbo
+    version: 1.0.0
+    qos-enable: false
+    # Must match protocol.name — Dubbo instance registration uses this to find the URL
+    protocol: tri
+    logger: slf4j
+    metadata-type: remote
+  protocol:
+    name: tri
+    port: -1
+    serialization: fastjson2
+  registry:
+    # namespace MUST be in URL or parameters (NOT a RegistryConfig field — gets ignored).
+    # use-as-config-center=false prevents Dubbo creating a 2nd Nacos ConfigService client.
+    address: nacos://${spring.cloud.nacos.server-addr}?username=${spring.cloud.nacos.username}&password=${spring.cloud.nacos.password}&namespace=${spring.cloud.nacos.namespace}
+    group: ${NACOS_GROUP:DEFAULT_GROUP}
+    # all = 应用级(instance)+ 接口级(interface) 双注册。纯 instance 模式下,
+    # 消费者接口级订阅可能解析不到应用级 provider(映射缺失)→ RPC 拿到空 provider。
+    # all 模式接口级订阅可直接命中,兼容性最好。
+    register-mode: all
+    use-as-config-center: false
+    use-as-metadata-center: false
+    # 空地址保护：Dubbo 3.2+ 默认关闭。关闭时若注册中心瞬时推送空提供者列表
+    # (如某个 provider 重启、或消费者先于 provider 启动),会清空已缓存地址且不再恢复，
+    # 导致 RPC "No provider available"。开启后保留上一批可用地址，避免重启竞态。
+    enable-empty-protection: true
+  consumer:
+    check: false
+    timeout: 5000
+    retries: 1
+    loadbalance: roundrobin
+  provider:
+    timeout: 5000
+    retries: 0
+    loadbalance: roundrobin
+  scan:
+    base-packages: vip.mate
+  metadata-report:
+    address: nacos://${spring.cloud.nacos.server-addr}?username=${spring.cloud.nacos.username}&password=${spring.cloud.nacos.password}&namespace=${spring.cloud.nacos.namespace}
+
+# ============================================================
+# MyBatis Plus — framework defaults (no DB credentials here)
+# ============================================================
+mybatis-plus:
+  global-config:
+    banner: false
+    db-config:
+      id-type: ASSIGN_ID
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+      insert-strategy: not_null
+      update-strategy: not_null
+      table-underline: true
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    call-setters-on-nulls: true
+    jdbc-type-for-null: 'null'
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: vip.mate.**.infrastructure.dao.po
+
+# ============================================================
+# Sa-Token — framework defaults
+# ============================================================
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: 86400
+  active-timeout: 1800
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-read-cookie: false
+  is-read-header: true
+  is-log: false
+  max-try-times: 12
+  # IMPORTANT: Override SA_TOKEN_JWT_SECRET env var in production (min 32 chars).
+  # Generate with: openssl rand -base64 48
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET:dev-only-jwt-secret-do-not-use-in-prod-32ch}
+
+# ============================================================
+# Actuator / Observability
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    defaults:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      env: ${spring.profiles.active}
+  tracing:
+    sampling:
+      probability: ${MATE_TRACING_PROBABILITY:1.0}
+  info:
+    env:
+      enabled: true
+    git:
+      mode: simple
+
+# ============================================================
+# Logging — patterns (no levels; levels are per-service)
+# ============================================================
+logging:
+  level:
+    root: INFO
+    vip.mate: INFO
+    org.apache.dubbo: WARN
+    com.alibaba.nacos: WARN
+    # Nacos AI 原生 Prompt 客户端把「Prompt not found」「prompt data is up to date」等软结果按 WARN 打;
+    # 本项目多数提示词故意不写 Nacos(走 classpath 兜底), 这些是预期且已处理的回落 → 降到 ERROR 免刷屏
+    com.alibaba.nacos.client.ai: ERROR
+    org.apache.http: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId},%X{spanId}] %logger{36} - %msg%n"
+  charset:
+    console: UTF-8
+    file: UTF-8
+
+# ============================================================
+# Spring AI — provider defaults (api-keys come from env vars)
+# ============================================================
+# Select active provider with: spring.ai.model.chat=<provider>
+# Default env var: MATE_AI_PROVIDER
+# ============================================================
+---
+spring:
+  ai:
+    model:
+      chat: ${MATE_AI_PROVIDER:anthropic}
+    # ---- Anthropic Claude ----
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+      base-url: ${ANTHROPIC_BASE_URL:https://api.anthropic.com}
+      chat:
+        options:
+          model: ${ANTHROPIC_MODEL:claude-sonnet-4-6}
+          max-tokens: 4096
+    # ---- OpenAI-compatible (also: KIMI/Moonshot, DashScope, ...) ----
+    # KIMI:  OPENAI_BASE_URL=https://api.moonshot.cn  OPENAI_MODEL=moonshot-v1-32k
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-5.5}
+          max-tokens: 4096
+    # ---- 智谱 GLM ----
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY:}
+      base-url: ${ZHIPUAI_BASE_URL:https://open.bigmodel.cn/api/paas/v4}
+      chat:
+        options:
+          model: ${ZHIPUAI_MODEL:glm-5}
+          max-tokens: 4096
+    # ---- Minimax ----
+    minimax:
+      api-key: ${MINIMAX_API_KEY:}
+      base-url: ${MINIMAX_BASE_URL:https://api.minimax.chat}
+      chat:
+        options:
+          model: ${MINIMAX_MODEL:abab6.5s-chat}
+          max-tokens: 4096
+    # ---- DeepSeek ----
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: ${DEEPSEEK_MODEL:deepseek-v4}
+          max-tokens: 4096
+    # ---- Ollama (self-hosted) ----
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+      chat:
+        options:
+          model: ${OLLAMA_MODEL:qwen2.5:latest}
+    # ---- MCP server auto-bridge ----
+    mcp:
+      server:
+        enabled: ${MATE_MCP_SERVER_ENABLED:false}
+        name: ${spring.application.name}
+        version: 1.0.0
+        type: SYNC
+
+# ============================================================
+# MateCloud feature toggles
+# ============================================================
+mate:
+  feature:
+    # SSO / 身份接入(企业微信/钉钉/飞书/LDAP 单点登录 + 通讯录同步)总开关。
+    # 开启后 mate-auth/mate-system 才装配 SSO providers/模板/同步/回调与「身份接入」配置页。
+    sso:
+      enabled: true
+  ai:
+    enabled: true
+    memory-max-messages: 20
+    default-conversation-id: default
+    advisor-logging-enabled: true
+    system-prompt: "You are MateCloud Assistant, an AI operator embedded in a Spring Boot microservice platform. Use available tools when the user's question requires live data; otherwise answer concisely."
+  idempotent:
+    enabled: true
+    key-prefix: "idem:"
+    token-expire-seconds: 600
+    header-name: X-Idempotent-Key
+  security:
+    encrypt:
+      # AES key for at-rest encryption of sensitive config (e.g. channel provider
+      # secrets in mate_channel_config). MUST be 16 / 24 / 32 bytes. OVERRIDE in production.
+      key: ${MATE_ENCRYPT_KEY:MateCloudDevEncryptKey0123456789}
+  tenant:
+    enabled: false
+    type: COLUMN
+    column: tenant_id
+    resolver: header
+    header-name: X-Tenant-Id
+    # Empty = super tenant disabled. A non-empty value combined with the header
+    # resolver is a cross-tenant bypass for anyone who can set X-Tenant-Id —
+    # only enable behind gateway auth + principal/role authorization.
+    super-tenant-id: ""
+    # Whitelist: ONLY these tables get `WHERE tenant_id = ?` appended. Every
+    # other table (config/dict/menu/tenant…) is global and never filtered.
+    include-tables:
+      - mate_user
+      - mate_admin
+      - mate_role
+  devtools:
+    enabled: false
+  doc:
+    enabled: true
+    project-name: MateCloud API

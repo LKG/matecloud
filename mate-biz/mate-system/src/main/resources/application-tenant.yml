@@ -1,0 +1,28 @@
+# ============================================================================
+# Demo profile: row-level multi-tenancy ON.
+#
+# Activate with `-Dspring.profiles.active=tenant` (or add it to the active
+# profile list). Combined with the V1.3.1 demo data this gives a fully working
+# isolation demo:
+#
+#   • admin / admin123          → system tenant "1" (super-tenant ⇒ sees ALL rows,
+#                                  i.e. the platform/console super-admin)
+#   • acme_admin / admin123     → tenant 1001, only sees Acme users/roles
+#   • globex_admin / admin123   → tenant 1002, only sees Globex users/roles
+#
+# Resolver is `token`: the tenant is taken from the Sa-Token session that
+# SaTokenIssuer stamps at login from the user's own tenant_id — no header
+# spoofing surface. Switch to `header`/`domain` for gateway-fronted setups.
+# ============================================================================
+mate:
+  tenant:
+    enabled: true
+    type: COLUMN
+    resolver: token
+    # System tenant "1" is the platform super-admin: bypasses row filtering so
+    # the console can manage every tenant. Tenant admins remain fully scoped.
+    super-tenant-id: "1"
+    include-tables:
+      - mate_user
+      - mate_admin
+      - mate_role

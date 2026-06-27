@@ -1,0 +1,123 @@
+# ============================================================
+# MateCloud Infrastructure Config  (prod profile)
+# ============================================================
+# DataId:    mate-infra-prod.yml
+# Group:     DEFAULT_GROUP
+# Namespace: prod
+#
+# NEVER commit real secrets to Git. Use env vars / K8s Secret.
+# IMPORTANT: Do NOT use YAML multi-document separator (---).
+# ============================================================
+
+# ---- MySQL / Druid (prod-grade pool sizes) ----
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=true&rewriteBatchedStatements=true
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 20
+      min-idle: 20
+      max-active: 200
+      max-wait: 30000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 600000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      filters: stat,wall,slf4j
+      web-stat-filter:
+        enabled: false
+      stat-view-servlet:
+        enabled: false
+
+  # ---- Redis (prod-grade pool) ----
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DB:0}
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 64
+          max-idle: 32
+          min-idle: 8
+          max-wait: 2000
+
+  # ---- RabbitMQ ----
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 50
+        concurrency: 5
+        max-concurrency: 20
+        retry:
+          enabled: true
+          max-attempts: 5
+          initial-interval: 2000
+
+  # ---- Sentinel (enabled in prod) ----
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD}
+        port: 8719
+
+# ---- Dubbo Registry (Nacos) ----
+dubbo:
+  registry:
+    address: nacos://${NACOS_HOST}:${NACOS_PORT:8848}?username=${NACOS_USERNAME}&password=${NACOS_PASSWORD}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:prod}
+  metadata-report:
+    address: nacos://${NACOS_HOST}:${NACOS_PORT:8848}?username=${NACOS_USERNAME}&password=${NACOS_PASSWORD}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:prod}
+
+# ---- MinIO ----
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket-name: ${MINIO_BUCKET:matecloud}
+
+# ---- XXL-Job ----
+xxl:
+  job:
+    admin-addresses: ${XXL_JOB_ADMIN}
+    access-token: ${XXL_JOB_TOKEN}
+    app-name: ${spring.application.name}
+    port: 9999
+    log-path: /data/logs/xxl-job
+    log-retention-days: 30
+
+# ---- Sa-Token (isolated Redis) ----
+sa-token:
+  alone-redis:
+    host: ${SA_TOKEN_REDIS_HOST}
+    port: ${SA_TOKEN_REDIS_PORT:6379}
+    password: ${SA_TOKEN_REDIS_PASSWORD}
+    database: ${SA_TOKEN_REDIS_DB:1}
+
+# ---- Logging (less verbose in prod) ----
+logging:
+  level:
+    root: WARN
+    vip.mate: INFO
+    com.baomidou.mybatisplus: WARN
+    org.springframework: WARN

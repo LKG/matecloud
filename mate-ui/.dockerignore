@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/.turbo
+**/.vite
+**/coverage
+.git
+.gitignore
+*.log

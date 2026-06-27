@@ -1,0 +1,2 @@
+vip.mate.starter.mq.RabbitMqAutoConfiguration
+vip.mate.starter.mq.event.DomainEventAutoConfiguration

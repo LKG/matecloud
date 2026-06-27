@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>vip.mate</groupId>
+    <artifactId>mate-bom</artifactId>
+    <version>5.0.8</version>
+    <packaging>pom</packaging>
+    <name>mate-bom</name>
+    <description>
+        MateCloud BOM (Bill of Materials). Import this once and all
+        MateCloud module versions stay aligned without per-dependency
+        versions in your downstream pom.
+    </description>
+
+    <properties>
+        <matecloud.version>1.0.0</matecloud.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- ==================== mate-common ==================== -->
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-base</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-api</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+
+            <!-- ==================== mate-starters (core 7) ==================== -->
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-ds-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-web-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-cache-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-nacos-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-rpc-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-sa-token-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-monitor-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+
+            <!-- ==================== mate-starters (business 6) ==================== -->
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-mq-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-job-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-security-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-file-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-excel-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-tenant-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-sso-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+
+            <!-- ==================== mate-starters-contrib (8) ==================== -->
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-sharding-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-seata-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-sentinel-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-gray-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-flow-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-rule-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-ai-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>vip.mate</groupId>
+                <artifactId>mate-test-starter</artifactId>
+                <version>${matecloud.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

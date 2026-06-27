@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>mate-starters</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-monitor-starter</artifactId>
+    <packaging>jar</packaging>
+    <name>mate-monitor-starter</name>
+    <description>MateCloud Monitor Starter - Actuator + Prometheus metrics + Distributed Tracing</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <!--
+          OTel 桥 (非 optional): 引入 monitor-starter 即获得真实分布式追踪 + MDC 的 traceId/spanId。
+          原为 optional → 不传递 → 任何服务都拿不到 Tracer, 追踪实际从未生效 (与 CLAUDE.md「monitor=Tracing」相悖)。
+          仅桥接, 不含导出器, 故无需 collector 也能让 traceId 进日志。
+        -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-otel</artifactId>
+        </dependency>
+        <!-- OTLP 导出器保持 optional: 需要 collector 才有意义, 按服务/环境选配。 -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-exporter-otlp</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+          仅供编译期引用 reactor.core.publisher.Hooks (开启响应式自动上下文传播)。
+          optional → 不传递; 响应式应用(网关)自带 reactor, Servlet 应用按 @ConditionalOnClass 跳过。
+        -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

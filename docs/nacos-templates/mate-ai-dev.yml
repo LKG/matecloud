@@ -1,0 +1,70 @@
+# ============================================================
+# MateCloud mate-ai service config (dev profile)
+# ============================================================
+# DataId:    mate-ai-dev.yml
+# Group:     DEFAULT_GROUP
+# Upload:    java -jar mate-cli.jar config push mate-ai-dev.yml
+#
+# This is the per-service override layer. Only put settings that
+# are SPECIFIC to mate-ai here; everything else inherits from
+# mate-infra-dev.yml + classpath mate-defaults.yml.
+# ============================================================
+
+# ---- Spring AI provider selection ---------------------------
+# mate-ai-starter ships with Anthropic as the default, plus
+# optional openai / zhipuai / minimax / deepseek / ollama on
+# the classpath. Pick ONE active chat model — Spring AI auto-
+# configures a ChatClient.Builder against it.
+spring:
+  ai:
+    # Switch this to: anthropic | openai | zhipuai | minimax | deepseek | ollama
+    model:
+      chat: anthropic
+
+    # ---- Anthropic Claude (default) ----
+    anthropic:
+      # The real key — DO NOT commit. Set via env in CI/CD.
+      api-key: ${ANTHROPIC_API_KEY:}
+      chat:
+        options:
+          model: claude-sonnet-4-6
+          temperature: 0.3
+          max-tokens: 4096
+
+    # ---- OpenAI (uncomment if model.chat=openai) ----
+    # openai:
+    #   api-key: ${OPENAI_API_KEY:}
+    #   base-url: https://api.openai.com
+    #   chat:
+    #     options:
+    #       model: gpt-5.5
+    #       temperature: 0.3
+
+    # ---- DeepSeek (uncomment if model.chat=deepseek) ----
+    # deepseek:
+    #   api-key: ${DEEPSEEK_API_KEY:}
+    #   chat:
+    #     options:
+    #       model: deepseek-v4
+
+# ---- mate-ai-starter behavior toggles -----------------------
+mate:
+  ai:
+    enabled: true
+    # Memory window: max messages retained per conversation id
+    # by Spring AI's MessageChatMemoryAdvisor.
+    memory-max-messages: 30
+    # Default system prompt when caller / conversation omits one.
+    system-prompt: |
+      你是 MateCloud 内置的 AI 助手,服务于一个 Spring Boot 4 + Dubbo 微服务平台.
+      回答以中文为主、技术问题保持简洁准确,需要查询真实数据时优先调用可用的 @Tool.
+    # AES-256-GCM key used to encrypt mate_ai_provider.api_key_cipher.
+    # MUST be set in production — dev fallback only suppresses startup error.
+    encryption:
+      key: ${MATE_AI_ENCRYPTION_KEY:}
+
+# ---- Per-service log level ----------------------------------
+logging:
+  level:
+    vip.mate.ai: DEBUG
+    org.springframework.ai: INFO

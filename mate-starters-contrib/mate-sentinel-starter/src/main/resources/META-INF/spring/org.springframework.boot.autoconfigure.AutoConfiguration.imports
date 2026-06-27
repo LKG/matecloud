@@ -1,0 +1,2 @@
+vip.mate.starter.sentinel.config.SentinelAutoConfiguration
+vip.mate.starter.sentinel.config.SentinelDubboConfiguration

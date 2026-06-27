@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>matecloud</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-auth</artifactId>
+    <packaging>jar</packaging>
+    <name>mate-auth</name>
+    <description>Mate Cloud - Authentication Service</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-web-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-nacos-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-rpc-starter</artifactId>
+        </dependency>
+        <!-- 可观测性 (core-7): Actuator + Prometheus + 链路追踪 (traceId 进日志) -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-monitor-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-cache-starter</artifactId>
+        </dependency>
+        <!--
+          Pulled in so login-success / login-fail events can be persisted to
+          mate_login_log directly. Cross-service event delivery via MQ would
+          be cleaner but adds infra requirements; for the demo footprint a
+          shared MySQL is acceptable.
+        -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-ds-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-sa-token-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>cn.dev33</groupId>
+                    <artifactId>sa-token-reactor-spring-boot3-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <!-- 第三方身份接入(企业微信/钉钉/飞书/LDAP):提供 SsoTemplate / IdentityMappingPort,
+             供 SSO/LDAP 登录策略使用。仅当 mate.feature.sso.enabled=true 时激活。 -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-sso-starter</artifactId>
+        </dependency>
+        <!-- 行为验证码 (滑动拼图) — xingyuv/captcha-plus v2.x (Spring Boot 3 / Java 17+) -->
+        <dependency>
+            <groupId>com.xingyuv</groupId>
+            <artifactId>spring-boot-starter-captcha-plus</artifactId>
+            <version>2.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-test-starter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

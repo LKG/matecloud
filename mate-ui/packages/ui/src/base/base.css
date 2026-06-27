@@ -1,0 +1,145 @@
+/* ============================================================
+   MateCloud base atoms — styles (RFC-053 #1)
+   ============================================================
+   Class names are produced by the CVA `*Variants.ts` functions.
+   These rules consume ONLY component-semantic tokens (--mc-btn-*,
+   --mc-field-*, --mc-tag-*) so dark mode / re-theming needs no
+   change here — only the token mapping in tokens.css.
+============================================================ */
+
+/* ---------- MateButton ---------- */
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--mc-radius-sm);
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s, opacity .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-btn:disabled { opacity: var(--mc-btn-disabled-opacity); cursor: not-allowed; }
+.mc-btn__label { display: inline-block; }
+
+/* sizes */
+.mc-btn--sm { height: 28px; padding: 0 12px; font-size: 12px; }
+.mc-btn--md { height: 34px; padding: 0 16px; font-size: 13px; }
+.mc-btn--lg { height: 42px; padding: 0 20px; font-size: 14px; border-radius: var(--mc-radius); }
+.mc-btn--block { width: 100%; }
+
+/* variants */
+.mc-btn--primary { background: var(--mc-btn-primary-bg); color: var(--mc-btn-primary-text); }
+.mc-btn--primary:not(:disabled):hover { background: var(--mc-btn-primary-bg-hover); }
+
+.mc-btn--secondary {
+  background: var(--mc-btn-secondary-bg);
+  color: var(--mc-btn-secondary-text);
+  border-color: var(--mc-btn-secondary-border);
+}
+.mc-btn--secondary:not(:disabled):hover { border-color: var(--mc-btn-secondary-border-hover); }
+
+.mc-btn--ghost { background: transparent; color: var(--mc-btn-ghost-text); }
+.mc-btn--ghost:not(:disabled):hover { background: var(--mc-btn-ghost-bg-hover); }
+
+.mc-btn--danger { background: var(--mc-btn-danger-bg); color: var(--mc-btn-danger-text); }
+.mc-btn--danger:not(:disabled):hover { background: var(--mc-btn-danger-bg-hover); }
+
+/* loading spinner */
+.mc-btn__spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: mc-btn-spin .6s linear infinite;
+}
+@keyframes mc-btn-spin { to { transform: rotate(360deg); } }
+
+/* ---------- MateTag ---------- */
+.mc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.mc-tag--sm { padding: 1px 8px; font-size: 11px; }
+.mc-tag--md { padding: 2px 9px; font-size: 12px; }
+.mc-tag__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.mc-tag--default { background: var(--mc-tag-bg); color: var(--mc-tag-text); }
+.mc-tag--primary { background: rgba(var(--mc-primary-rgb), 0.10); color: var(--mc-primary); }
+.mc-tag--success { background: rgb(23 178 106 / 0.10); color: #067647; }
+.mc-tag--warning { background: rgb(247 144 9 / 0.10); color: #B54708; }
+.mc-tag--danger  { background: rgb(240 68 56 / 0.10); color: #B42318; }
+.mc-tag--info    { background: rgb(54 191 250 / 0.10); color: #026AA2; }
+
+html.dark .mc-tag--success { color: #47CD89; }
+html.dark .mc-tag--warning { color: #FDB022; }
+html.dark .mc-tag--danger  { color: #F97066; }
+html.dark .mc-tag--info    { color: #36BFFA; }
+
+/* ---------- MateInput (field) ---------- */
+.mc-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--mc-field-bg);
+  border: 1px solid var(--mc-field-border);
+  border-radius: var(--mc-radius-sm);
+  padding: 0 12px;
+  transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+.mc-field:not(.mc-field--disabled):hover { border-color: var(--mc-field-border-hover); }
+.mc-field:focus-within {
+  border-color: var(--mc-field-border-focus);
+  box-shadow: 0 0 0 3px var(--mc-field-ring);
+}
+.mc-field--sm { height: 28px; font-size: 12px; }
+.mc-field--md { height: 34px; font-size: 13px; }
+.mc-field--lg { height: 42px; font-size: 14px; border-radius: var(--mc-radius); }
+
+.mc-field--destructive { border-color: var(--mc-field-border-destructive); }
+.mc-field--destructive:focus-within {
+  border-color: var(--mc-field-border-destructive);
+  box-shadow: 0 0 0 3px var(--mc-field-ring-destructive);
+}
+.mc-field--disabled { background: var(--mc-field-bg-disabled); cursor: not-allowed; }
+
+.mc-field__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--mc-field-text);
+  font-family: inherit;
+  font-size: inherit;
+}
+.mc-field__input::placeholder { color: var(--mc-field-placeholder); }
+.mc-field__input:disabled { cursor: not-allowed; }
+
+.mc-field__affix { display: inline-flex; align-items: center; color: var(--mc-text-muted); flex-shrink: 0; }
+.mc-field__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--mc-fill);
+  color: var(--mc-text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mc-field__clear:hover { color: var(--mc-text-primary); background: var(--mc-fill-hover); }

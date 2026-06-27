@@ -1,0 +1,122 @@
+/*
+ * Copyright (c) 2024-2026 Beijing Daotiandi Technology Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package vip.mate.starter.ai.tool;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.tool.method.MethodToolCallback;
+import org.springframework.ai.tool.support.ToolDefinitions;
+import org.springframework.ai.tool.support.ToolUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.lang.NonNull;
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Scans every Spring bean for methods annotated with Spring AI's
+ * {@link Tool @Tool} and builds a central registry.
+ * <p>
+ * The registry doubles as a {@link ToolCallbackProvider} so it can be passed
+ * directly to {@code ChatClient.builder(...).defaultToolCallbacks(...)}. Each
+ * registered tool is also exposed through our REST endpoint
+ * ({@code /api/v1/ai/tools}) for inspection and direct invocation.
+ *
+ * @author mateaix
+ */
+@Slf4j
+public class AiToolRegistry implements BeanPostProcessor, ToolCallbackProvider {
+
+    private final Map<String, ToolCallback> callbacks = new ConcurrentHashMap<>();
+
+    @Override
+    public Object postProcessAfterInitialization(@NonNull Object bean, @NonNull String beanName)
+            throws BeansException {
+        Class<?> targetClass = ClassUtils.getUserClass(bean);
+        ReflectionUtils.doWithMethods(targetClass, method -> {
+            Tool toolAnnotation = AnnotationUtils.findAnnotation(method, Tool.class);
+            if (toolAnnotation == null) {
+                return;
+            }
+            register(bean, method);
+        });
+        return bean;
+    }
+
+    private void register(Object bean, Method method) {
+        String toolName = ToolUtils.getToolName(method);
+        if (callbacks.containsKey(toolName)) {
+            log.warn("[mate-ai] Duplicate tool name ignored: {} (bean={})",
+                    toolName, bean.getClass().getSimpleName());
+            return;
+        }
+        method.setAccessible(true);
+        ToolCallback callback = MethodToolCallback.builder()
+                .toolDefinition(ToolDefinitions.from(method))
+                .toolMethod(method)
+                .toolObject(bean)
+                .build();
+        callbacks.put(toolName, callback);
+        log.info("[mate-ai] Registered tool: {} ({}.{})", toolName,
+                bean.getClass().getSimpleName(), method.getName());
+    }
+
+    // ---- ToolCallbackProvider (consumed by ChatClient.builder) ----
+
+    @Override
+    @NonNull
+    public ToolCallback[] getToolCallbacks() {
+        return callbacks.values().toArray(new ToolCallback[0]);
+    }
+
+    // ---- Lookup / listing API ----
+
+    public Collection<ToolCallback> listAll() {
+        return Collections.unmodifiableCollection(callbacks.values());
+    }
+
+    public ToolCallback get(String name) {
+        return callbacks.get(name);
+    }
+
+    public int size() {
+        return callbacks.size();
+    }
+
+    public List<Map<String, Object>> describeAll() {
+        List<Map<String, Object>> result = new ArrayList<>(callbacks.size());
+        for (ToolCallback cb : callbacks.values()) {
+            var def = cb.getToolDefinition();
+            result.add(Map.of(
+                    "name", def.name(),
+                    "description", def.description(),
+                    "inputSchema", def.inputSchema()
+            ));
+        }
+        return result;
+    }
+}

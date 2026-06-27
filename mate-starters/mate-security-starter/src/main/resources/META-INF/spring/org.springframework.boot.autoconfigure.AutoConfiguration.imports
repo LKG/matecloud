@@ -1,0 +1,3 @@
+vip.mate.starter.security.config.SecurityAutoConfiguration
+vip.mate.starter.datascope.DataScopeAutoConfiguration
+vip.mate.starter.idempotent.config.IdempotentAutoConfiguration

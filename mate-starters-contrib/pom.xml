@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>matecloud</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-starters-contrib</artifactId>
+    <packaging>pom</packaging>
+    <name>mate-starters-contrib</name>
+    <description>Advanced starters - use when needed, not by default</description>
+
+    <modules>
+        <module>mate-seata-starter</module>
+        <module>mate-sharding-starter</module>
+        <module>mate-sentinel-starter</module>
+        <module>mate-gray-starter</module>
+        <module>mate-flow-starter</module>
+        <module>mate-rule-starter</module>
+        <module>mate-ai-starter</module>
+        <module>mate-model-starter</module>
+        <module>mate-test-starter</module>
+    </modules>
+
+</project>

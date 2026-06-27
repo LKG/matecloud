@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a defect in MateCloud
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. For **security vulnerabilities**, do NOT use this
+        form — see SECURITY.md and email security@mate.vip instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and the expected behaviour.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. see error
+    validations:
+      required: true
+  - type: input
+    id: module
+    attributes:
+      label: Affected module
+      placeholder: e.g. mate-system / mate-gateway / mate-ui / mate-tenant-starter
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: e.g. dev @ 643a152
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: OS, JDK, Node/pnpm, DB, deployment mode (dubbo/local)
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell

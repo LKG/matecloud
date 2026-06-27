@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: mate-auth
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  autoconfigure:
+    exclude:
+      - com.xingyuv.captcha.config.AjCaptchaAutoConfiguration
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          # P2: gateway auto-builds a route from this Nacos metadata (see
+          # mate-gateway DiscoveryMetadataRouteLocator). No gateway change needed.
+          gateway-path: /api/v1/auth/**
+
+server:
+  port: 9020
+
+mate:
+  # Per-service Flyway history table = flyway_history_auth. Independent version line.
+  module:
+    code: auth
+  security:
+    # 16-char AES key for password transport encryption (AES-CFB).
+    # MUST match the frontend's DEFAULT_TRANSPORT_KEY in crypto.ts.
+    # Override via env: MATE_SECURITY_TRANSPORT_KEY
+    transport-key: ${MATE_SECURITY_TRANSPORT_KEY:mate9x!K#2qL8pZw}
+
+logging:
+  level:
+    vip.mate.auth: debug
+
+# xingyuv/captcha-plus 行为验证码配置
+aj:
+  captcha:
+    cache-type: redis          # 分布式部署使用 Redis 存储
+    type: blockPuzzle          # 滑动拼图
+    water-mark: MateCloud
+    req-frequency-limit-enable: false   # 开发阶段关闭频率限制
+    history-data-clear-enable: true
+    check-repeat: 5            # 验证码有效期 (秒)

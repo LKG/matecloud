@@ -1,0 +1,90 @@
+# Minimal service config. Everything else is inherited from:
+#   - classpath:mate-defaults.yml (packaged in mate-base)
+#   - nacos:mate-infra-${profile}.yml  (single shared infra config)
+#   - nacos:${app-name}-${profile}.yml (optional per-service overrides)
+
+spring:
+  application:
+    name: mate-gateway
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  cloud:
+    gateway:
+      server:
+        webflux:
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                # 显式来源白名单(逗号分隔),通过环境变量 MATE_CORS_ALLOWED_ORIGINS 配置。
+                # 不再使用 "*":配合 allow-credentials=true 时 "*" 会回显任意 Origin,
+                # 等同于信任所有站点带凭证跨域读响应,存在安全风险。
+                # 默认值仅含本地前端开发地址(Vite 3000);生产部署必须设置实际域名。
+                allowed-origin-patterns: ${MATE_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000}
+                allowed-methods: "*"
+                allowed-headers: "*"
+                allow-credentials: true
+                max-age: 3600
+          # 以下为兜底静态路由;新服务改用 discovery 元数据 gateway-path 自动建路由
+          # (见 DiscoveryMetadataRouteLocator),无需在此新增。
+          routes:
+            - id: mate-auth
+              uri: lb://mate-auth
+              predicates:
+                - Path=/api/v1/auth/**
+
+            - id: mate-system
+              uri: lb://mate-system
+              predicates:
+                - Path=/api/v1/users/**,/api/v1/departments/**,/api/v1/admin/**,/api/v1/sso/**
+
+            - id: mate-notice
+              uri: lb://mate-notice
+              predicates:
+                - Path=/api/v1/notices/**
+
+            - id: mate-ai
+              uri: lb://mate-ai
+              predicates:
+                - Path=/api/v1/ai/**
+
+server:
+  port: 9010
+
+# Default gateway auth paths (can be overridden via Nacos)
+mate:
+  gateway:
+    auth:
+      public-paths:
+        - /api/v1/auth/login
+        - /api/v1/auth/register
+        - /api/v1/auth/sms/**
+        - /api/v1/auth/captcha/**
+        # SSO / LDAP 登录链路 — 均为 pre-login, 不携带 token, 必须放行;
+        # 否则登录页拉 providers 列表会被 gateway 拦截成 401。
+        - /api/v1/auth/sso/**
+        - /api/v1/auth/ldap/login
+        # 企业微信通讯录变更回调入口 — 企业微信服务器直接调用, 不带 sa-token;
+        # 鉴权靠回调自身的 Token/EncodingAESKey 验签(WeComCallbackCrypto)。
+        - /api/v1/sso/callback/**
+        - /actuator/**
+        - /doc.html
+        - /webjars/**
+        - /v3/api-docs/**
+      login-paths:
+        - /api/v1/**
+      admin-paths:
+        - /api/v1/users/delete/**
+        - /api/v1/roles/**
+        - /api/v1/menus/**
+        # 网关治理控制台(灰度/限流/超时)—— 本地接口, 仅超管可访问
+        - /api/v1/gateway/**
+
+logging:
+  level:
+    vip.mate.gateway: debug
+    org.springframework.cloud.gateway: info

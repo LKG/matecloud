@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: mate-ai
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  flyway:
+    mixed: true
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          # P2: gateway auto-builds a route from this Nacos metadata (see
+          # mate-gateway DiscoveryMetadataRouteLocator). No gateway change needed.
+          gateway-path: /api/v1/ai/**
+
+mate:
+  # Per-service Flyway history table = flyway_history_ai. Independent version line.
+  module:
+    code: ai
+
+server:
+  port: 9060
+
+logging:
+  level:
+    vip.mate.ai: debug

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>mate-starters</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-sso-starter</artifactId>
+    <packaging>jar</packaging>
+    <name>mate-sso-starter</name>
+    <description>MateCloud SSO Starter - pluggable third-party identity (WeChat Work / DingTalk / Feishu / LDAP) SSO login + organization sync. Provider SPI + template method + sync pipeline + hexagonal ports; reuses ChannelConfigStore for credentials. See RFC-056.</description>
+
+    <dependencies>
+        <!-- Result / BizException / ErrorCode / ChannelConfigStore / ProviderDescriptor -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-base</artifactId>
+        </dependency>
+        <!-- DbChannelConfigStore + ChannelCrypto: SSO credentials are admin-managed
+             in mate_channel_config (channel=identity, AES). Any consumer that enables
+             SSO needs the config store, so the capability carries it. -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-channel-starter</artifactId>
+        </dependency>
+        <!-- Spring core (DI, ApplicationEvent, @ConfigurationProperties) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <!-- JdbcTemplate for the default IdentityMappingPort impl (mate_identity_* tables) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <!-- Parse vendor JSON responses -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!-- HTTP: JDK java.net.http.HttpClient (no extra dependency) -->
+        <!-- LDAP: JDK javax.naming (no extra dependency) -->
+        <!-- Optional: web layer for the JS-SDK signature / webhook controllers -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Optional: Redis-backed token cache + sync lock (clustered). Falls back
+             to in-memory / no-op when Redisson is absent. -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

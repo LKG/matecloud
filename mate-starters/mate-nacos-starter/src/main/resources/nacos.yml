@@ -1,0 +1,30 @@
+# ==============================================================
+# Nacos Configuration Template
+# Copy relevant sections to your service's bootstrap.yml
+# ==============================================================
+
+spring:
+  cloud:
+    nacos:
+      server-addr: ${NACOS_HOST:localhost}:${NACOS_PORT:8848}
+      namespace: ${NACOS_NAMESPACE:}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+
+      discovery:
+        enabled: true
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        ephemeral: true
+        metadata:
+          version: ${matecloud.version:1.0.0}
+          env: ${spring.profiles.active:dev}
+
+      config:
+        enabled: true
+        file-extension: yaml
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        shared-configs:
+          - data-id: mate-common.yaml
+            group: ${NACOS_GROUP:DEFAULT_GROUP}
+            refresh: true
+        refresh-enabled: true

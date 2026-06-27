@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>matecloud</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-starters</artifactId>
+    <packaging>pom</packaging>
+    <name>mate-starters</name>
+    <description>Auto-configuration starter modules (13 starters: 7 core + 6 business)</description>
+
+    <modules>
+        <!-- Tier 1: Core (7) -->
+        <module>mate-ds-starter</module>
+        <module>mate-web-starter</module>
+        <module>mate-cache-starter</module>
+        <module>mate-nacos-starter</module>
+        <module>mate-rpc-starter</module>
+        <module>mate-menu-starter</module>
+        <module>mate-sa-token-starter</module>
+        <module>mate-monitor-starter</module>
+        <!-- Tier 2: Business (6) -->
+        <module>mate-mq-starter</module>
+        <module>mate-job-starter</module>
+        <module>mate-security-starter</module>
+        <module>mate-file-starter</module>
+        <module>mate-file-oss</module>
+        <module>mate-sms-starter</module>
+        <module>mate-channel-starter</module>
+        <module>mate-excel-starter</module>
+        <module>mate-tenant-starter</module>
+        <module>mate-sso-starter</module>
+    </modules>
+
+</project>

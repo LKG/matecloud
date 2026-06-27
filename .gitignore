@@ -1,0 +1,79 @@
+# === Maven ===
+target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# === IDE - IntelliJ IDEA ===
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# === IDE - Eclipse ===
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+
+# === IDE - VS Code ===
+.vscode/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Logs ===
+*.log
+logs/
+
+# === Environment ===
+.env
+*.env.local
+
+# === Maven ===
+.flattened-pom.xml
+
+# === Compiled ===
+*.class
+*.jar
+*.war
+*.ear
+
+# === Package files ===
+*.tar.gz
+*.rar
+*.zip
+
+# === JRebel ===
+rebel.xml
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Claude Code local cache ===
+.claude/*
+# 例外：harness 约束工程是团队共用的治理资产，需纳入版本库
+!.claude/.harness/
+# launch.json 是本地预览配置，不进版本库
+.claude/launch.json
+
+# === Frontend (Node/pnpm) ===
+node_modules/
+dist/
+.turbo/
+*.tsbuildinfo
+.vitepress/cache/

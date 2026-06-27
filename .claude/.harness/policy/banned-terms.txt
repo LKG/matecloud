@@ -1,0 +1,9 @@
+# 代码文件里禁止出现的外部产品名（check-competitor-names 读取本表）
+# 一行一个词，# 开头为注释。匹配大小写不敏感、词首边界 \b<term>。
+# 合法例外（不在此表）：coze / n8n —— 工作流导入的格式标识符，属互操作非借鉴。
+dify
+fastgpt
+qknow
+sqlbot
+crewai
+hermes

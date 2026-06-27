@@ -1,0 +1,190 @@
+# ============================================================
+# MateCloud Infrastructure Config  (prod profile)
+# ============================================================
+# DataId:    mate-infra-prod.yml
+# Group:     DEFAULT_GROUP
+# Namespace: prod
+#
+# Copy this file, replace the TODO placeholders with real
+# production endpoints, and upload via:
+#
+#   java -jar mate-cli.jar config push mate-infra-prod.yml \
+#        --file docs/nacos-templates/mate-infra-prod.yml
+#
+# NEVER commit real secrets to Git. Use env vars / K8s Secret /
+# Vault. The ${VAR:default} syntax lets values come from the
+# runtime environment while keeping this file Git-safe.
+# ============================================================
+
+spring:
+  # ---- MySQL / Druid (prod-grade pool sizes) ----
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=true&rewriteBatchedStatements=true
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 20
+      min-idle: 20
+      max-active: 200
+      max-wait: 30000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 600000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 50
+      filters: stat,wall,slf4j
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+      # Disable Druid's web UI in prod
+      web-stat-filter:
+        enabled: false
+      stat-view-servlet:
+        enabled: false
+
+  # ---- Redis (prod-grade pool) ----
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      database: ${REDIS_DB:0}
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 64
+          max-idle: 32
+          min-idle: 8
+          max-wait: 2000
+
+  # ---- RabbitMQ ----
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 50
+        concurrency: 5
+        max-concurrency: 20
+        retry:
+          enabled: true
+          max-attempts: 5
+          initial-interval: 2000
+          multiplier: 2.0
+          max-interval: 30000
+
+  cloud:
+    nacos:
+      discovery:
+        namespace: ${NACOS_NAMESPACE:prod}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+      config:
+        namespace: ${NACOS_NAMESPACE:prod}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+
+# ---- Seata (prod: enable distributed transactions) ----
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: mate_tx_group
+  service:
+    vgroup-mapping:
+      mate_tx_group: default
+    grouplist:
+      default: ${SEATA_SERVER}
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR}
+      namespace: ${NACOS_NAMESPACE:prod}
+      group: SEATA_GROUP
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: ${NACOS_SERVER_ADDR}
+      namespace: ${NACOS_NAMESPACE:prod}
+      group: SEATA_GROUP
+
+# ---- XXL-Job ----
+xxl:
+  job:
+    admin-addresses: ${XXL_JOB_ADMIN}
+    access-token: ${XXL_JOB_TOKEN}
+    app-name: ${spring.application.name}
+    port: 9999
+    log-path: /data/logs/xxl-job
+    log-retention-days: 30
+
+---
+# ---- Sentinel ----
+spring:
+  cloud:
+    sentinel:
+      enabled: true
+      eager: true
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD}
+        port: 8719
+      datasource:
+        flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR}
+            namespace: ${NACOS_NAMESPACE:prod}
+            group: SENTINEL_GROUP
+            data-id: ${spring.application.name}-flow-rules
+            rule-type: flow
+        degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR}
+            namespace: ${NACOS_NAMESPACE:prod}
+            group: SENTINEL_GROUP
+            data-id: ${spring.application.name}-degrade-rules
+            rule-type: degrade
+
+# ---- MinIO ----
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  bucket-name: ${MINIO_BUCKET:matecloud}
+
+# ---- Dubbo registry ----
+dubbo:
+  registry:
+    address: nacos://${NACOS_SERVER_ADDR}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:prod}
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+  metadata-report:
+    address: nacos://${NACOS_SERVER_ADDR}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:prod}
+
+# ---- Sa-Token (isolated Redis for session store in prod) ----
+sa-token:
+  alone-redis:
+    host: ${SA_TOKEN_REDIS_HOST}
+    port: ${SA_TOKEN_REDIS_PORT:6379}
+    password: ${SA_TOKEN_REDIS_PASSWORD}
+    database: ${SA_TOKEN_REDIS_DB:1}
+
+# ---- Logging (less verbose in prod) ----
+logging:
+  level:
+    root: WARN
+    vip.mate: INFO
+    com.baomidou.mybatisplus: WARN
+    org.springframework: WARN

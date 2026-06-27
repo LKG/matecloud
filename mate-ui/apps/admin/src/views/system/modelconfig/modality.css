@@ -1,0 +1,31 @@
+/* Modality badge colors for the model-config page. Imported unscoped by the
+   components that render <span class="modal m-*"> so the classes resolve
+   regardless of scoped-style boundaries.
+   Each badge sets ONE accent hue (--m-c); bg/text derive from it via
+   color-mix so the same rule adapts to light AND dark: light = deep accent
+   text on a pale tint, dark = brightened accent text on a deep tint.
+   (Was hardcoded pale pastels that glared in dark mode.) */
+.modal {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 5px;
+  padding: 1px 6px;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: var(--m-c);
+  background: color-mix(in srgb, var(--m-c) 13%, transparent);
+}
+html.dark .modal {
+  color: color-mix(in srgb, var(--m-c) 56%, #ffffff);
+  background: color-mix(in srgb, var(--m-c) 24%, transparent);
+}
+.modal.m-llm { --m-c: #1849A9; }
+.modal.m-emb { --m-c: #5925DC; }
+.modal.m-rer { --m-c: #0E7090; }
+.modal.m-tts { --m-c: #9A6400; }
+.modal.m-stt { --m-c: #B54708; }
+.modal.m-img { --m-c: #C11574; }
+.modal.m-vid { --m-c: #B42318; }
+.modal.m-mod { --m-c: #475467; }

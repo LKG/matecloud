@@ -1,0 +1,262 @@
+# ============================================================
+# MateCloud Infrastructure Config  (dev profile)
+# ============================================================
+# DataId:    mate-infra-dev.yml
+# Group:     DEFAULT_GROUP
+# Namespace: dev
+# Upload:    java -jar mate-cli.jar config init
+#
+# ------------------------------------------------------------
+# THIS IS THE ONLY SHARED CONFIG EVERY MATECLOUD SERVICE READS.
+# ------------------------------------------------------------
+#
+# It holds every env-specific setting that differs between
+# dev / test / prod. Framework-constant settings live in
+# classpath mate-defaults.yml (packaged in mate-base.jar).
+#
+# All values use ${ENV_VAR:default} so the same file works in
+# both local dev (via defaults) and Docker/K8s (via env vars).
+# ============================================================
+
+# ============================================================
+# 1. MySQL / Druid (mate-ds-starter)
+# ============================================================
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&createDatabaseIfNotExist=true&rewriteBatchedStatements=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:matecloud123}
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat,wall,slf4j
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=1000
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*,/actuator/*"
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: false
+        login-username: ${DRUID_USERNAME:admin}
+        login-password: ${DRUID_PASSWORD:matecloud123}
+        allow: ""
+
+# ============================================================
+# 2. Redis / Redisson (mate-cache-starter)
+# ============================================================
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:matecloud123}
+      database: ${REDIS_DB:0}
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000
+
+# ============================================================
+# 3. RabbitMQ (mate-mq-starter)
+# ============================================================
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:matecloud}
+    password: ${RABBITMQ_PASS:matecloud123}
+    virtual-host: ${RABBITMQ_VHOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 10
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+          multiplier: 2.0
+          max-interval: 10000
+
+# ============================================================
+# 4. Spring Cloud Nacos — per-env auth overrides
+# ============================================================
+# (server-addr comes from env var in mate-defaults.yml; here
+#  you can override namespace, group, or enable/disable auth)
+# ============================================================
+  cloud:
+    nacos:
+      discovery:
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+      config:
+        namespace: ${NACOS_NAMESPACE:dev}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+
+# ============================================================
+# 5. Seata (mate-seata-starter)
+# ============================================================
+# Uncomment and fill in only if you use Seata in this profile.
+# ============================================================
+seata:
+  enabled: ${SEATA_ENABLED:false}
+  application-id: ${spring.application.name}
+  tx-service-group: mate_tx_group
+  service:
+    vgroup-mapping:
+      mate_tx_group: default
+    grouplist:
+      default: ${SEATA_SERVER:127.0.0.1:8091}
+    enable-degrade: false
+    disable-global-transaction: false
+  config:
+    type: nacos
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      namespace: ${NACOS_NAMESPACE:dev}
+      group: SEATA_GROUP
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      namespace: ${NACOS_NAMESPACE:dev}
+      group: SEATA_GROUP
+
+# ============================================================
+# 6. XXL-Job (mate-job-starter)
+# ============================================================
+xxl:
+  job:
+    admin-addresses: ${XXL_JOB_ADMIN:http://127.0.0.1:8080/xxl-job-admin}
+    access-token: ${XXL_JOB_TOKEN:matecloud-xxljob-token}
+    app-name: ${spring.application.name}
+    port: 9999
+    log-path: ${XXL_JOB_LOG_PATH:./logs/xxl-job}
+    log-retention-days: 30
+
+# ============================================================
+# 7. Sentinel (mate-sentinel-starter)
+# ============================================================
+---
+spring:
+  cloud:
+    sentinel:
+      enabled: ${SENTINEL_ENABLED:false}
+      eager: true
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        port: 8719
+      datasource:
+        # Flow rules stored in Nacos
+        flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:dev}
+            group: SENTINEL_GROUP
+            data-id: ${spring.application.name}-flow-rules
+            rule-type: flow
+        # Degrade (circuit breaker) rules
+        degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            namespace: ${NACOS_NAMESPACE:dev}
+            group: SENTINEL_GROUP
+            data-id: ${spring.application.name}-degrade-rules
+            rule-type: degrade
+
+# ============================================================
+# 8. MinIO (mate-file-starter)
+# ============================================================
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+  access-key: ${MINIO_ACCESS_KEY:matecloud}
+  secret-key: ${MINIO_SECRET_KEY:matecloud123}
+  bucket-name: ${MINIO_BUCKET:matecloud}
+
+# ============================================================
+# 9. Dubbo registry (mate-rpc-starter)
+# ============================================================
+# The registry ADDRESS is already resolved from NACOS_SERVER_ADDR
+# in mate-defaults.yml; these are env-specific parameter overrides.
+# ============================================================
+dubbo:
+  registry:
+    address: nacos://${NACOS_SERVER_ADDR:127.0.0.1:8848}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:dev}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:nacos}
+      register-consumer-url: true
+  metadata-report:
+    address: nacos://${NACOS_SERVER_ADDR:127.0.0.1:8848}
+    parameters:
+      namespace: ${NACOS_NAMESPACE:dev}
+
+# ============================================================
+# 10. Sa-Token Redis storage (mate-sa-token-starter)
+# ============================================================
+# By default Sa-Token uses the Redis configured above for session
+# storage. If you want an isolated Redis for auth tokens, set:
+# ============================================================
+sa-token:
+  alone-redis:
+    host: ${SA_TOKEN_REDIS_HOST:${REDIS_HOST:127.0.0.1}}
+    port: ${SA_TOKEN_REDIS_PORT:${REDIS_PORT:6379}}
+    password: ${SA_TOKEN_REDIS_PASSWORD:${REDIS_PASSWORD:matecloud123}}
+    database: ${SA_TOKEN_REDIS_DB:1}
+    timeout: 5000
+
+# ============================================================
+# 11. Spring AI api-keys
+# ============================================================
+# DO NOT put real api-keys in Nacos if your Nacos is
+# unencrypted. Prefer env vars / K8s Secret / Vault.
+# The placeholders below let operators opt-in via Nacos if they
+# really want centralized config.
+# ============================================================
+---
+spring:
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY:}
+    minimax:
+      api-key: ${MINIMAX_API_KEY:}
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+
+# ============================================================
+# 12. Logging levels (per-env)
+# ============================================================
+logging:
+  level:
+    root: INFO
+    vip.mate: DEBUG
+    com.baomidou.mybatisplus: INFO
+    com.alibaba.druid: WARN
+    org.springframework.web: INFO
+    org.springframework.cloud.gateway: INFO

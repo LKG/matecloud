@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: mate-notice
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          # P2: gateway auto-builds a route from this Nacos metadata (see
+          # mate-gateway DiscoveryMetadataRouteLocator). No gateway change needed.
+          gateway-path: /api/v1/notices/**
+
+mate:
+  # Per-service Flyway history table = flyway_history_notice. Independent version
+  # line — fixes the old V1.2.1 collision with mate-system in the shared history.
+  module:
+    code: notice
+
+server:
+  port: 9050
+
+logging:
+  level:
+    vip.mate.notice: debug

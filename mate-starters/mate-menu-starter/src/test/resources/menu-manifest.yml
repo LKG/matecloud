@@ -1,0 +1,22 @@
+menus:
+  - code: t_parent
+    name: 父目录
+    type: M
+    icon: folder
+    sort: 1
+    children:
+      - code: t_menu
+        parentCode: t_parent
+        name: 子菜单
+        path: /t/page
+        component: t/index
+        perms: t:page:list
+        type: C
+        sort: 1
+        children:
+          - code: t_btn
+            parentCode: t_menu
+            name: 按钮
+            perms: t:page:add
+            type: F
+            sort: 1

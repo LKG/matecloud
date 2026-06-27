@@ -1,0 +1,69 @@
+# MateCloud Harness 索引：规则 ↔ 校验 ↔ 严重级
+# 事实来源是 rules/ 下的 markdown 与 CLAUDE.md / docs/conventions/；本文件只做索引。
+
+meta:
+  project: matecloud
+  purpose: 约束 AI/人对本仓库的改动，守住架构铁律、安全边界与开源/商业切分
+  run: bash .claude/.harness/checks/run-all.sh
+
+rules:
+  - file: rules/01-architecture.md
+    topic: DDD 四层分层、领域纯净、CQRS、仓储反转、MapStruct
+    source: [CLAUDE.md, docs/conventions/coding-standards.md]
+  - file: rules/02-conventions.md
+    topic: 命名/包根/mate_前缀//api/v1/错误码/无内联FQN/import 布局/@AutoConfiguration
+    source: [CLAUDE.md, docs/conventions/coding-standards.md, memory:import-layout-convention]
+  - file: rules/03-security.md
+    topic: Sa-Token 鉴权、禁硬编码密钥、默认保守
+    source: [docs/conventions/coding-standards.md]
+  - file: rules/04-open-source.md
+    topic: 开源/企业边界(open-core)、禁竞品名、禁内部路径、发布剥离清单
+    source: [RFC-026, RFC-057, memory:no-competitor-names-in-code]
+  - file: rules/05-frontend.md
+    topic: mate-ui 前端约定（MateMessage/MateMessageBox 替代 EP 消息弹窗、--mc token 禁硬编码色、EP 单实例 dedupe、改造 EP 用复合选择器、改完跑真实 build）
+    source: [现状, 'memory:mate-message-toast', 'memory:mate-ui-element-plus-dedupe', 'memory:mate-ui-dark-mode-hardcoded-surfaces', 'memory:mate-ui-restyle-ep-compound-selector', 'memory:mate-ui-verify-real-build']
+
+checks:
+  blocking:               # 当前为零，违反则提交/CI 失败
+    - id: check-competitor-names
+      rule: rules/04-open-source.md
+      asserts: 代码文件(java/vue/ts/sql)无 Dify/FastGPT/qKnow/sqlbot 等竞品名
+    - id: check-secrets
+      rule: rules/03-security.md
+      asserts: 无真实密钥(sk-/AKIA/ghp_/PRIVATE KEY)硬编码进非测试代码
+    - id: check-oss-boundary
+      rule: rules/04-open-source.md
+      asserts: 开源模块不反向依赖企业模块
+    - id: check-domain-purity
+      rule: rules/01-architecture.md
+      asserts: domain/model/** (聚合/实体/值对象) 零框架 import
+    - id: check-no-elmessage
+      rule: rules/05-frontend.md
+      asserts: mate-ui 无 ElMessage/ElMessageBox（用 @matecloud/ui 的 MateMessage/MateMessageBox）
+    - id: check-vite-dedupe
+      rule: rules/05-frontend.md
+      asserts: 依赖 element-plus+@matecloud/ui 的 app 其 vite.config 有 resolve.dedupe 含 element-plus
+  warning:                # 已知技术债，仅提示
+    - id: check-mapstruct
+      rule: rules/01-architecture.md
+      asserts: 不用 BeanUtils.copyProperties (应走 MapStruct)
+    - id: check-autoconfig
+      rule: rules/02-conventions.md
+      asserts: '*AutoConfiguration.java 使用 @AutoConfiguration 而非顶层 @Configuration'
+    - id: check-flyway
+      rule: rules/01-architecture.md
+      asserts: flyway 迁移不含 DROP TABLE / TRUNCATE TABLE
+    - id: check-frontend-hardcoded-color
+      rule: rules/05-frontend.md
+      asserts: .vue 不直写 #rgb 颜色字面量（应走 --mc-* token；存量告警，逐步还）
+
+skills:                   # 约束式操作 playbook；bash skills/install.sh 装成可 / 调用
+  - id: mate-new-module
+    when: 新建业务模块 mate-{name}
+    rule: [rules/01-architecture.md, rules/02-conventions.md]
+  - id: mate-preflight
+    when: 提交 / 开 PR 前自检
+    rule: [rules/01-architecture.md, rules/02-conventions.md, rules/04-open-source.md]
+  - id: mate-oss-gate
+    when: 开源 / 公开发布前把关
+    rule: rules/04-open-source.md

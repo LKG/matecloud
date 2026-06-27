@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2024-2026 Beijing Daotiandi Technology Co., Ltd.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package vip.mate.system.types.security;
+
+/**
+ * Permission code constants used by Sa-Token's {@code @SaCheckPermission}
+ * annotations across mate-system controllers.
+ *
+ * <p>Naming convention: {@code sys:{entity}:{action}}. Wildcards
+ * ({@code sys:*}, {@code *}) match too — Sa-Token resolves them at check time.
+ *
+ * @author mateaix
+ */
+public final class Perms {
+
+    private Perms() {}
+
+    public static final String USER_LIST   = "sys:user:list";
+    public static final String USER_ADD    = "sys:user:add";
+    public static final String USER_EDIT   = "sys:user:edit";
+    public static final String USER_DELETE = "sys:user:delete";
+    public static final String USER_RESET  = "sys:user:reset";
+}

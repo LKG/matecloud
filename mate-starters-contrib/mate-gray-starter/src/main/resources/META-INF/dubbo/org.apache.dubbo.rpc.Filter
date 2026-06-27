@@ -1,0 +1,2 @@
+grayConsumer=vip.mate.starter.gray.GrayDubboConsumerFilter
+grayProvider=vip.mate.starter.gray.GrayDubboProviderFilter

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 318 42" width="318" height="42">
+  <defs>
+    <linearGradient id="mx" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00cc8c"/>
+      <stop offset="0.5" stop-color="#36b0e2"/>
+      <stop offset="1" stop-color="#155aef"/>
+    </linearGradient>
+  </defs>
+  <text x="159" y="37" text-anchor="middle" font-family="Arial, Helvetica, sans-serif"
+        font-size="52" font-weight="800" letter-spacing="2" fill="url(#mx)">MATEAIX</text>
+</svg>

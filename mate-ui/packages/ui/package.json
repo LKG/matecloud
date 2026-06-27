@@ -1,0 +1,20 @@
+{
+  "name": "@matecloud/ui",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "element-plus": "^2.13.7",
+    "@vscode/markdown-it-katex": "^1.1.1",
+    "highlight.js": "^11.10.0",
+    "katex": "^0.16.11",
+    "markdown-it": "^14.1.0",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "@types/markdown-it": "^14.1.2"
+  }
+}

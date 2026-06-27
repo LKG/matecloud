@@ -1,0 +1,24 @@
+{
+  "serverUrl": "http://localhost:9020",
+  "isStrict": false,
+  "allInOne": true,
+  "outPath": "./target/smart-doc",
+  "projectName": "mate-auth API",
+  "packageFilters": "vip.mate.auth.trigger.controller",
+  "showAuthor": true,
+  "createDebugPage": true,
+  "style": "xt256",
+  "coverOld": true,
+  "requestHeaders": [
+    {
+      "name": "Authorization",
+      "type": "string",
+      "desc": "Sa-Token",
+      "required": false,
+      "since": "1.0.0"
+    }
+  ],
+  "responseBodyAdvice": {
+    "className": "vip.mate.base.result.Result"
+  }
+}

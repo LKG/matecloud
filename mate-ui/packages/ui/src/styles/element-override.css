@@ -1,0 +1,439 @@
+/* ============================================================
+   Element Plus Component Overrides
+   ============================================================
+   Kill EP's heavy default styling. Make it feel like a
+   custom design system, not "element-plus-admin-template".
+============================================================ */
+
+/* ---- Table: clean, borderless, fully transparent ---- */
+.el-table {
+  --el-table-border-color: transparent;
+  --el-table-header-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  --el-table-bg-color: transparent;
+  --el-table-expanded-cell-bg-color: transparent;
+  --el-fill-color-lighter: transparent;
+  --el-fill-color-blank: transparent;
+  font-size: 13px;
+  background-color: transparent !important;
+  border-radius: var(--mc-radius-lg) !important;
+}
+.el-table__inner-wrapper,
+.el-table__inner-wrapper::before,
+.el-table__header-wrapper,
+.el-table__body-wrapper {
+  background: transparent !important;
+}
+.el-table__inner-wrapper::before {
+  display: none !important;
+}
+.el-table th.el-table__cell {
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--mc-text-muted);
+  border-bottom: 1px solid var(--mc-border) !important;
+  background: transparent !important;
+}
+.el-table td.el-table__cell {
+  border-bottom: 1px solid var(--mc-border-light) !important;
+}
+.el-table--border .el-table__inner-wrapper::after,
+.el-table--border::before,
+.el-table--border::after,
+.el-table__border-left-patch {
+  display: none !important;
+}
+.el-table--border .el-table__cell {
+  border-right: none !important;
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: transparent !important;
+}
+.el-table__row:hover > td.el-table__cell {
+  background: var(--mc-fill) !important;
+}
+.el-table__footer-wrapper tr th.el-table__fixed-right-patch {
+  background: transparent !important;
+}
+/* 固定列遮罩:玻璃卡片下单元格默认透明,而固定列(position:sticky, background:inherit)
+   会被横滑到其下方的内容穿透。无论是否出现滚动条,固定列都补不透明背景(EP 的 fixed-column
+   类只看列配置、与滚动无关,故 is-scrolling-none 无滚动态同样要遮)。用 header/body-wrapper
+   祖先抬高 specificity,确保盖过 EP 自带的 is-scrolling-none 表头透明规则;hover / 选中态
+   对齐普通行高亮。 */
+.el-table .el-table__header-wrapper th.el-table-fixed-column--left,
+.el-table .el-table__header-wrapper th.el-table-fixed-column--right,
+.el-table .el-table__header-wrapper th.el-table__fixed-right-patch,
+.el-table .el-table__body-wrapper td.el-table-fixed-column--left,
+.el-table .el-table__body-wrapper td.el-table-fixed-column--right,
+.el-table.is-scrolling-none .el-table__header-wrapper th.el-table-fixed-column--left,
+.el-table.is-scrolling-none .el-table__header-wrapper th.el-table-fixed-column--right,
+.el-table.is-scrolling-none .el-table__body-wrapper td.el-table-fixed-column--left,
+.el-table.is-scrolling-none .el-table__body-wrapper td.el-table-fixed-column--right {
+  background-color: var(--mc-bg-elevated) !important;
+}
+.el-table .el-table__body-wrapper tr:hover > td.el-table-fixed-column--left,
+.el-table .el-table__body-wrapper tr:hover > td.el-table-fixed-column--right,
+.el-table .el-table__body-wrapper tr.current-row > td.el-table-fixed-column--left,
+.el-table .el-table__body-wrapper tr.current-row > td.el-table-fixed-column--right {
+  background-color: var(--mc-fill) !important;
+}
+.el-table__empty-block {
+  min-height: 120px;
+}
+
+/* ---- Button: softer, less aggressive ---- */
+.el-button {
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.el-button--primary {
+  --el-button-hover-bg-color: color-mix(in srgb, var(--mc-primary) 90%, #000);
+  --el-button-active-bg-color: color-mix(in srgb, var(--mc-primary) 82%, #000);
+}
+.el-button--default {
+  --el-button-bg-color: var(--mc-bg-elevated);
+  --el-button-border-color: var(--mc-border);
+  --el-button-text-color: var(--mc-text-secondary);
+  --el-button-hover-bg-color: var(--mc-fill);
+  --el-button-hover-border-color: var(--mc-border);
+  --el-button-hover-text-color: var(--mc-text-primary);
+}
+.el-button.is-text,
+.el-button.is-link {
+  color: var(--mc-text-muted);
+}
+.el-button.is-text:hover,
+.el-button.is-link:hover {
+  color: var(--mc-primary);
+  background: var(--mc-primary-light-5);
+}
+
+/* ---- Input: MateCloud -style — translucent bg, border on hover/focus ---- */
+.el-input__wrapper {
+  border-radius: 8px !important;
+  background: var(--mc-input-bg, rgb(200 206 218 / 0.25)) !important;
+  box-shadow: 0 0 0 1px transparent inset !important;
+  transition: all 0.15s ease !important;
+}
+.el-input__wrapper:hover {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  box-shadow: 0 0 0 1px var(--mc-border) inset !important;
+}
+.el-input__wrapper.is-focus {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  box-shadow: 0 0 0 1px var(--mc-primary) inset !important;
+}
+.el-textarea__inner {
+  border-radius: 8px !important;
+  background: var(--mc-input-bg, rgb(200 206 218 / 0.25)) !important;
+  border-color: transparent !important;
+  transition: all 0.15s ease !important;
+}
+.el-textarea__inner:hover {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  border-color: var(--mc-border) !important;
+}
+.el-textarea__inner:focus {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  border-color: var(--mc-primary) !important;
+}
+
+/* ---- Input group (with #append / #prepend button) ----
+   The wrapper override above forces border-radius:8px !important on ALL corners,
+   which beats Element Plus's own corner-squaring for groups — leaving a visible
+   gap between the input and the addon button. Re-square the inner corners and
+   round only the addon's outer corner so they read as one connected control. */
+.el-input-group--append > .el-input__wrapper {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+.el-input-group--prepend > .el-input__wrapper {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+.el-input-group__append { border-radius: 0 8px 8px 0; }
+.el-input-group__prepend { border-radius: 8px 0 0 8px; }
+
+/* ---- Select: translucent trigger ---- */
+.el-select .el-select__wrapper {
+  border-radius: 8px !important;
+  background: var(--mc-input-bg, rgb(200 206 218 / 0.25)) !important;
+  box-shadow: none !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s ease !important;
+}
+.el-select .el-select__wrapper:hover {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  border-color: var(--mc-border) !important;
+}
+.el-select .el-select__wrapper.is-focused {
+  background: var(--mc-bg-soft, #f9fafb) !important;
+  border-color: var(--mc-primary) !important;
+}
+/* Select dropdown panel — 对齐 主流对话产品 portal-select:
+   rounded-xl 面板 + 0.5px components-panel-border + shadow-lg, p-1 内边距. */
+.el-select-dropdown {
+  border-radius: 12px !important;
+  border: 0.5px solid var(--mc-divider-regular, rgb(16 24 40 / 0.08)) !important;
+  box-shadow: var(--mc-shadow-lg) !important;
+  padding: 0 !important;
+}
+.el-select-dropdown__list {
+  padding: 4px !important;
+}
+.el-select-dropdown__item {
+  /* EP 默认 height:34px + line-height:34px; 若只改 padding 不重置二者,
+     34px 行高被塞进 (34-16)=18px 内容区 + overflow:hidden → 文字被裁切/错位 (全局 bug).
+     这里 height:auto + 正常行高, 让 padding 决定项高 (主流对话产品 system-sm 选项). */
+  position: relative;
+  height: auto;
+  line-height: 1.5;
+  /* flex 居中: 让带 logo / 徽标的自定义选项内容垂直对齐 (纯文字选项不受影响). */
+  display: flex;
+  align-items: center;
+  border-radius: 8px;            /* 主流对话产品 rounded-lg */
+  margin: 1px 0;
+  padding: 8px 12px !important;  /* 主流对话产品 px-3 py-2 */
+  font-size: 13px;               /* 主流对话产品 system-sm */
+  font-weight: 500;              /* 主流对话产品 system-sm-medium */
+  color: var(--mc-text-secondary);
+  white-space: nowrap;
+}
+.el-select-dropdown__item.is-hovering {
+  background: var(--mc-fill) !important;   /* 主流对话产品 state-base-hover */
+}
+/* 选中态 (单选): 主色文字 + 右侧蓝色对勾 (主流对话产品 RiCheckLine text-accent),
+   取代 EP 默认的"加粗 700 + 无对勾". 多选项沿用 EP 自带的勾选样式. */
+.el-select-dropdown:not(.is-multiple) .el-select-dropdown__item.is-selected {
+  color: var(--mc-primary) !important;
+  font-weight: 600 !important;
+  padding-right: 30px !important;
+}
+.el-select-dropdown:not(.is-multiple) .el-select-dropdown__item.is-selected::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  background-color: var(--mc-primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 15px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / 15px no-repeat;
+}
+
+/* ---- Checkbox: MateCloud -style ---- */
+.el-checkbox__input .el-checkbox__inner {
+  border-radius: 4px;
+  width: 16px;
+  height: 16px;
+  border-color: var(--mc-border);
+}
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: var(--mc-primary);
+  border-color: var(--mc-primary);
+}
+
+/* ---- Prevent page-level scrollbar — all scrolling is internal ---- */
+html, body {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+}
+
+/* ---- Dialog: MateCloud modal pattern ---- */
+/* Fix body-shift jitter: prevent EP from adding padding-right to body */
+body.el-popup-parent--hidden {
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+/* Overlay — only tint, do NOT flex here (breaks el-drawer) */
+.el-overlay {
+  background-color: rgba(16, 24, 40, 0.24) !important;
+}
+/* Dialog centering — target el-overlay-dialog (dialog-only wrapper, not used by drawer) */
+.el-overlay-dialog {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+/* Dialog panel — MateCloud : rounded-2xl, p-6, shadow-xl, centered */
+.el-dialog {
+  border-radius: 16px !important;
+  border: none !important;
+  box-shadow: 0 20px 24px -4px rgba(16, 24, 40, 0.08), 0 8px 8px -4px rgba(16, 24, 40, 0.03) !important;
+  overflow: hidden;
+  margin: 0 !important;
+}
+.el-dialog__header {
+  padding: 24px 24px 0 !important;
+  border-bottom: none;
+  margin-right: 0 !important;
+}
+.el-dialog__title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--mc-text-primary) !important;
+  line-height: 1.4 !important;
+}
+.el-dialog__headerbtn {
+  top: 20px !important;
+  right: 20px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.el-dialog__headerbtn:hover {
+  background: var(--mc-fill);
+}
+.el-dialog__body {
+  padding: 16px 24px !important;
+}
+.el-dialog__footer {
+  padding: 12px 24px 24px !important;
+  border-top: none;
+}
+
+/* ---- Tag: softer, pill-shaped ---- */
+.el-tag {
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 8px;
+  height: 24px;
+}
+.el-tag--small {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+.el-tag--success {
+  --el-tag-bg-color: #ECFDF3;
+  --el-tag-text-color: #067647;
+}
+.el-tag--warning {
+  --el-tag-bg-color: #FFFAEB;
+  --el-tag-text-color: #B54708;
+}
+.el-tag--danger {
+  --el-tag-bg-color: #FEF3F2;
+  --el-tag-text-color: #B42318;
+}
+.el-tag--info {
+  --el-tag-bg-color: var(--mc-fill);
+  --el-tag-text-color: var(--mc-text-muted);
+}
+
+/* ---- Pagination: minimal ---- */
+.el-pagination {
+  --el-pagination-button-bg-color: transparent;
+  font-size: 13px;
+}
+.el-pagination .el-pager li {
+  border-radius: 6px;
+  font-weight: 500;
+  min-width: 32px;
+}
+.el-pagination .el-pager li.is-active {
+  background: var(--mc-primary) !important;
+  color: #fff !important;
+}
+
+/* ---- Tabs: thin underline ---- */
+.el-tabs__active-bar {
+  height: 2px !important;
+  border-radius: 1px;
+}
+.el-tabs__header {
+  margin-bottom: 20px;
+}
+.el-tabs__item {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mc-text-muted);
+}
+.el-tabs__item.is-active {
+  color: var(--mc-primary);
+  font-weight: 600;
+}
+
+/* ---- Form: tighter label ---- */
+.el-form-item__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mc-text-secondary);
+}
+
+/* ---- Breadcrumb ---- */
+.el-breadcrumb__inner {
+  font-weight: 400 !important;
+  color: var(--mc-text-muted) !important;
+}
+.el-breadcrumb__item:last-child .el-breadcrumb__inner {
+  color: var(--mc-text-secondary) !important;
+  font-weight: 500 !important;
+}
+
+/* ---- Switch ---- */
+.el-switch {
+  --el-switch-on-color: var(--mc-primary);
+}
+
+/* ---- Message Box / Drawer ---- */
+.el-drawer__header {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--mc-border-light);
+}
+.el-drawer__body {
+  padding: 20px;
+}
+
+/* ---- Loading ---- */
+.el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+html.dark .el-loading-mask {
+  background-color: rgba(12, 17, 29, 0.7) !important;
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--mc-scrollbar-thumb, #C8CDD5); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--mc-scrollbar-thumb-hover, #98A2B2); }
+
+/* ---- Selection ---- */
+::selection {
+  background: var(--mc-primary-light-5);
+  color: var(--mc-text-primary);
+}
+
+/* ---- EP dark mode refinements ---- */
+html.dark .el-dialog {
+  background: var(--mc-bg-elevated) !important;
+  border: 1px solid var(--mc-border) !important;
+}
+html.dark .el-select-dropdown {
+  background: var(--mc-bg-elevated) !important;
+  border-color: var(--mc-border) !important;
+}
+html.dark .el-tag--success {
+  --el-tag-bg-color: rgba(23, 178, 106, 0.12);
+  --el-tag-text-color: #4ADE80;
+}
+html.dark .el-tag--warning {
+  --el-tag-bg-color: rgba(247, 144, 9, 0.12);
+  --el-tag-text-color: #FBBF24;
+}
+html.dark .el-tag--danger {
+  --el-tag-bg-color: rgba(240, 68, 56, 0.12);
+  --el-tag-text-color: #F87171;
+}

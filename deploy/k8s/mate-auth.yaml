@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mate-auth
+  namespace: matecloud
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mate-auth
+  template:
+    metadata:
+      labels:
+        app: mate-auth
+    spec:
+      containers:
+        - name: mate-auth
+          image: matecloud/mate-auth:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9020
+          envFrom:
+            - configMapRef:
+                name: matecloud-config
+            - secretRef:
+                name: matecloud-secret
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9020
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9020
+            initialDelaySeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mate-auth
+  namespace: matecloud
+spec:
+  type: ClusterIP
+  selector:
+    app: mate-auth
+  ports:
+    - port: 9020
+      targetPort: 9020
+      protocol: TCP
+      name: http

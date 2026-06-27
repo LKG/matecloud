@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: mate-system
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  flyway:
+    mixed: true
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          # P2: gateway auto-builds a route from this Nacos metadata (see
+          # mate-gateway DiscoveryMetadataRouteLocator). No gateway change needed.
+          gateway-path: /api/v1/users/**,/api/v1/departments/**,/api/v1/admin/**,/api/v1/sso/**
+
+mate:
+  # Per-service Flyway history table = flyway_history_system (see
+  # docs/conventions/pluggable-module-guide.md). Independent version line.
+  module:
+    code: system
+
+server:
+  port: 9030
+
+logging:
+  level:
+    vip.mate.system: debug

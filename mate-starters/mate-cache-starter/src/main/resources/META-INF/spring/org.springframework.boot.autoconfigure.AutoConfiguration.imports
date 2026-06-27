@@ -1,0 +1,4 @@
+vip.mate.starter.cache.CacheAutoConfiguration
+vip.mate.starter.lock.DistributedLockAutoConfiguration
+vip.mate.starter.distribute.config.DistributeAutoConfiguration
+vip.mate.starter.rediskey.RedisKeyAutoConfiguration

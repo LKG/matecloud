@@ -1,0 +1,325 @@
+/* ============================================================
+   MateCloud Design Tokens
+   ============================================================
+   Inspired by MateCloud clean, minimal aesthetic.
+   Warm grays, calm blue, minimal borders, soft shadows.
+============================================================ */
+
+:root {
+  /* ---- Brand (MateCloud exact values) ---- */
+  --mc-primary: #155AEF;
+  --mc-primary-hover: #004AEB;
+  --mc-primary-light-3: #84ADFF;
+  --mc-primary-light-4: #B2CCFF;
+  --mc-primary-light-5: #EFF4FF;
+  --mc-primary-rgb: 21, 90, 239;
+  --mc-primary-accent: #296DFF;
+
+  /* ---- Status ---- */
+  --mc-success: #17B26A;
+  --mc-warning: #F79009;
+  --mc-danger: #F04438;
+  --mc-info: #667085;
+
+  /* ---- Status soft (badges / pills / inline result boxes) ----
+     soft = pastel bg, strong = high-contrast text. Both flip in html.dark
+     (deep bg + bright text) so status chips read in either mode — replaces
+     per-component hardcoded #ecfdf3/#fef3f2/#fffaeb pastels. */
+  --mc-success-soft: #ECFDF3; --mc-success-strong: #067647;
+  --mc-warning-soft: #FFFAEB; --mc-warning-strong: #B54708;
+  --mc-danger-soft: #FEF3F2; --mc-danger-strong: #B42318;
+
+  /* ---- Surfaces (MateCloud : #F2F4F7 body, #fff elevated) ---- */
+  --mc-bg: #F2F4F7;
+  --mc-bg-soft: #F9FAFB;
+  --mc-bg-elevated: #FFFFFF;
+  --mc-bg-overlay: rgba(255, 255, 255, 0.88);
+  --mc-sidebar-bg: #FFFFFF;
+  --mc-header-bg: rgba(255, 255, 255, 0.96);
+  --mc-input-bg: rgb(200 206 218 / 0.25);
+
+  /* ---- Text (MateCloud gray scale exact) ---- */
+  --mc-text-primary: #101828;
+  --mc-text-secondary: #354052;
+  --mc-text-muted: #676F83;
+  --mc-text-disabled: #98A2B2;
+
+  /* ---- Borders (MateCloud : semi-transparent) ---- */
+  --mc-border: #EAECF0;
+  --mc-border-light: #F2F4F7;
+  /* one step stronger than --mc-border — for hover edges that must read in
+     BOTH modes (a plain box-shadow hover is invisible on a dark canvas). */
+  --mc-border-hover: #D5D9E0;
+  --mc-divider-subtle: rgb(16 24 40 / 0.04);
+  --mc-divider-regular: rgb(16 24 40 / 0.08);
+
+  /* ---- Fill ---- */
+  --mc-fill: #F2F4F7;
+  --mc-fill-hover: #EAECF0;
+
+  /* ---- Interactive states (MateCloud exact) ---- */
+  --mc-state-hover: rgb(200 206 218 / 0.2);
+  --mc-state-active: rgb(200 206 218 / 0.4);
+  --mc-state-accent-hover: #EFF4FF;
+  --mc-state-accent-active: rgb(21 90 239 / 0.08);
+
+  /* ---- Menu (MateCloud exact) ---- */
+  --mc-menu-text: #495464;
+  --mc-menu-text-active: #18222F;
+  --mc-menu-text-hover: #354052;
+  --mc-menu-bg-hover: rgb(200 206 218 / 0.2);
+  --mc-menu-bg-active: rgb(21 90 239 / 0.08);
+  /* Subtle hover / inset surface — adapts per mode (was hardcoded #F7F9FC,
+     which showed as a bright band in dark mode). */
+  --mc-fill-hover: rgba(247, 249, 252, 0.6);
+
+  /* ---- Shadows (MateCloud : rgba(16,24,40) very low opacity) ---- */
+  --mc-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --mc-shadow-md: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --mc-shadow-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+
+  /* 厂商 logo 衬板: 第三方 logo 多深色描边, 需浅背板才可见; 浅色态纯白, 深色态柔和浅灰 (见 html.dark)。 */
+  --mc-logo-plate: #ffffff;
+
+  /* ---- Layout ---- */
+  --mc-aside-width: 220px;
+  --mc-aside-collapsed-width: 64px;
+  /* Top-nav mode: left sub-menu (level-2/3 only) — narrower than the full sidebar */
+  --mc-subtree-width: 200px;
+  --mc-header-height: 56px;
+  --mc-tab-height: 40px;
+
+  /* ---- Radius ---- */
+  --mc-radius: 8px;
+  --mc-radius-lg: 12px;
+  --mc-radius-xl: 16px;
+  --mc-radius-sm: 6px;
+
+  /* ---- Glass morphism ---- */
+  --mc-surface-overlay: rgba(255, 255, 255, 0.72);
+  --mc-panel-raised: rgba(255, 255, 255, 0.86);
+  --mc-glow: radial-gradient(circle at top, rgba(21, 90, 239, 0.12), transparent 55%);
+  --mc-shadow-soft: 0 10px 30px rgba(16, 24, 40, 0.06);
+  --mc-shadow-medium: 0 18px 48px rgba(16, 24, 40, 0.08);
+  --mc-shadow-strong: 0 24px 70px rgba(16, 24, 40, 0.12);
+
+  /* ---- Scrollbar ---- */
+  --mc-scrollbar-thumb: #C8CDD5;
+  --mc-scrollbar-thumb-hover: #98A2B2;
+
+  /* ============================================================
+     Component-level semantic tokens (RFC-053 #3)
+     Base atoms (packages/ui/src/base) consume ONLY these — never
+     raw palette values. Re-theming / high-contrast = remap here,
+     components stay untouched. They reference the layers above,
+     so dark mode follows automatically unless overridden below.
+  ============================================================ */
+  /* Button */
+  --mc-btn-primary-bg: var(--mc-primary);
+  --mc-btn-primary-bg-hover: var(--mc-primary-hover);
+  --mc-btn-primary-text: #FFFFFF;
+  --mc-btn-secondary-bg: var(--mc-bg-elevated);
+  --mc-btn-secondary-text: var(--mc-text-secondary);
+  --mc-btn-secondary-border: var(--mc-border);
+  --mc-btn-secondary-border-hover: var(--mc-primary-light-3);
+  --mc-btn-ghost-text: var(--mc-primary);
+  --mc-btn-ghost-bg-hover: var(--mc-state-accent-active);
+  --mc-btn-danger-bg: var(--mc-danger);
+  --mc-btn-danger-bg-hover: #D92D20;
+  --mc-btn-danger-text: #FFFFFF;
+  --mc-btn-disabled-opacity: 0.5;
+
+  /* Field (base form controls — distinct from EP's --mc-input-bg fill) */
+  --mc-field-bg: var(--mc-bg-elevated);
+  --mc-field-bg-disabled: var(--mc-bg-soft);
+  --mc-field-border: var(--mc-border);
+  --mc-field-border-hover: var(--mc-primary-light-3);
+  --mc-field-border-focus: var(--mc-primary);
+  --mc-field-border-destructive: var(--mc-danger);
+  --mc-field-text: var(--mc-text-primary);
+  --mc-field-placeholder: var(--mc-text-disabled);
+  --mc-field-ring: rgba(var(--mc-primary-rgb), 0.12);
+  --mc-field-ring-destructive: rgba(240, 68, 56, 0.12);
+
+  /* Tag */
+  --mc-tag-bg: var(--mc-fill);
+  --mc-tag-text: var(--mc-text-secondary);
+
+  /* Card */
+  --mc-card-bg: var(--mc-bg-elevated);
+  --mc-card-border: var(--mc-border-light);
+  --mc-card-shadow: var(--mc-shadow-md);
+}
+
+html.dark {
+  --mc-primary: #528BFF;
+  --mc-primary-light-3: #1D3A6B;
+  --mc-primary-light-4: #15305A;
+  --mc-primary-light-5: rgba(82, 139, 255, 0.12);
+  --mc-primary-rgb: 82, 139, 255;
+
+  /* Dark surfaces — Dify-aligned elevation ladder (body < panel < raised),
+     lifted off near-black so cards actually separate from the page.
+     Was #0C111D/#161B26 (too dark + too flat → cards vanished in dark mode). */
+  --mc-bg: #15181E;
+  --mc-bg-elevated: #1D212A;
+  --mc-bg-overlay: rgba(29, 33, 42, 0.92);
+  --mc-sidebar-bg: #15181E;
+  --mc-header-bg: rgba(21, 24, 30, 0.95);
+
+  --mc-text-primary: #F7F8FA;
+  --mc-text-secondary: #D5D8DE;
+  --mc-text-muted: #9BA1AC;
+  --mc-text-disabled: #6E727C;
+
+  /* Translucent light borders (Dify divider tokens) — read on every surface,
+     unlike the old #1F242F/#161B26 which were ~invisible against the cards. */
+  --mc-border: rgb(200 206 218 / 0.16);
+  --mc-border-light: rgb(200 206 218 / 0.09);
+  --mc-border-hover: rgb(200 206 218 / 0.28);
+
+  --mc-fill: #272C36;
+  --mc-fill-hover: #2C313C;
+
+  /* Status soft — deep tinted bg + bright text (matches the dark semantic ramp) */
+  --mc-success-soft: #1C3834; --mc-success-strong: #4AC38B;
+  --mc-warning-soft: #403325; --mc-warning-strong: #F9A83F;
+  --mc-danger-soft: #3F272C; --mc-danger-strong: #F36D64;
+
+  --mc-state-hover: rgb(255 255 255 / 0.06);
+  --mc-state-active: rgb(255 255 255 / 0.1);
+  --mc-state-accent-hover: rgba(82, 139, 255, 0.1);
+  --mc-state-accent-active: rgba(82, 139, 255, 0.15);
+  --mc-menu-text: #94969C;
+  --mc-menu-text-active: #F5F5F6;
+  --mc-menu-text-hover: #CECFD2;
+  --mc-menu-bg-hover: rgb(255 255 255 / 0.06);
+  --mc-menu-bg-active: rgba(82, 139, 255, 0.12);
+  --mc-fill-hover: rgb(200 206 218 / 0.08);
+  --mc-input-bg: rgb(255 255 255 / 0.08);
+  --mc-bg-soft: #222630;
+  --mc-divider-subtle: rgb(200 206 218 / 0.08);
+  --mc-divider-regular: rgb(200 206 218 / 0.14);
+
+  --mc-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --mc-shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+  --mc-shadow-lg: 0 12px 16px -4px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.12);
+
+  /* 深色态 logo 衬板: 柔和浅灰而非刺眼纯白, logo 仍清晰 */
+  --mc-logo-plate: #e6e8ec;
+
+  --mc-surface-overlay: rgba(22, 27, 38, 0.68);
+  --mc-panel-raised: rgba(30, 36, 50, 0.85);
+  --mc-glow: radial-gradient(circle at top, rgba(82, 139, 255, 0.1), transparent 55%);
+  --mc-shadow-soft: 0 14px 32px rgba(0, 0, 0, 0.22);
+  --mc-shadow-medium: 0 20px 60px rgba(0, 0, 0, 0.28);
+  --mc-shadow-strong: 0 28px 90px rgba(0, 0, 0, 0.35);
+  --mc-scrollbar-thumb: #3A4050;
+  --mc-scrollbar-thumb-hover: #4A5060;
+
+  /* ---- Component-level semantic tokens — dark overrides (RFC-053 #3) ----
+     Most follow the remapped palette automatically; only the few whose
+     light values were hardcoded need explicit dark values. */
+  --mc-btn-primary-bg-hover: #3B76F0;
+  --mc-btn-danger-bg-hover: #F04438;
+  --mc-field-ring-destructive: rgba(249, 112, 102, 0.18);
+}
+
+/* ============================================================
+   Element Plus Deep Override
+   Kill EP's default look. Use our tokens everywhere.
+============================================================ */
+:root {
+  --el-color-primary: var(--mc-primary);
+  --el-color-success: var(--mc-success);
+  --el-color-warning: var(--mc-warning);
+  --el-color-danger: var(--mc-danger);
+  --el-color-info: var(--mc-info);
+
+  --el-font-size-base: 14px;
+  --el-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 6px;
+  --el-border-radius-round: 20px;
+
+  --el-border-color: var(--mc-border);
+  --el-border-color-light: var(--mc-border-light);
+  --el-border-color-lighter: var(--mc-border-light);
+  --el-border-color-hover: var(--mc-primary-light-3);
+
+  --el-bg-color: var(--mc-bg-elevated);
+  --el-bg-color-page: var(--mc-bg);
+  --el-bg-color-overlay: var(--mc-bg-elevated);
+  --el-fill-color: var(--mc-fill);
+  --el-fill-color-light: var(--mc-bg);
+  --el-fill-color-lighter: var(--mc-border-light);
+  --el-fill-color-blank: var(--mc-bg-elevated);
+
+  --el-text-color-primary: var(--mc-text-primary);
+  --el-text-color-regular: var(--mc-text-secondary);
+  --el-text-color-secondary: var(--mc-text-muted);
+  --el-text-color-placeholder: var(--mc-text-disabled);
+  --el-text-color-disabled: var(--mc-text-disabled);
+
+  --el-box-shadow: var(--mc-shadow-md);
+  --el-box-shadow-light: var(--mc-shadow);
+  --el-box-shadow-lighter: var(--mc-shadow);
+  --el-box-shadow-dark: var(--mc-shadow-lg);
+
+  --el-table-border-color: var(--mc-border-light);
+  --el-table-header-bg-color: var(--mc-bg);
+  --el-table-header-text-color: var(--mc-text-muted);
+  --el-table-row-hover-bg-color: var(--mc-border-light);
+  --el-table-current-row-bg-color: var(--mc-primary-light-5);
+
+  --el-dialog-border-radius: var(--mc-radius-lg);
+  --el-input-border-color: var(--mc-border);
+  --el-tag-border-radius: 6px;
+}
+
+html.dark {
+  --el-color-primary: var(--mc-primary);
+  --el-color-success: var(--mc-success);
+  --el-color-warning: var(--mc-warning);
+  --el-color-danger: var(--mc-danger);
+  --el-color-info: var(--mc-info);
+  --el-border-color: var(--mc-border);
+  --el-border-color-light: var(--mc-border-light);
+  --el-border-color-lighter: var(--mc-border-light);
+  --el-bg-color: var(--mc-bg-elevated);
+  --el-bg-color-page: var(--mc-bg);
+  /* Popovers / dropdowns / dialogs sit one step ABOVE cards (Dify panel-on-panel) */
+  --el-bg-color-overlay: var(--mc-bg-soft);
+  --el-fill-color: var(--mc-fill);
+  --el-fill-color-light: var(--mc-bg);
+  --el-fill-color-lighter: var(--mc-border-light);
+  --el-fill-color-blank: var(--mc-bg-elevated);
+  --el-text-color-primary: var(--mc-text-primary);
+  --el-text-color-regular: var(--mc-text-secondary);
+  --el-text-color-secondary: var(--mc-text-muted);
+  --el-text-color-placeholder: var(--mc-text-disabled);
+  --el-box-shadow: var(--mc-shadow-md);
+  --el-box-shadow-light: var(--mc-shadow);
+  --el-box-shadow-dark: var(--mc-shadow-lg);
+  --el-table-border-color: var(--mc-border-light);
+  --el-table-header-bg-color: var(--mc-bg);
+  --el-table-header-text-color: var(--mc-text-muted);
+  --el-table-row-hover-bg-color: var(--mc-fill);
+  --el-table-current-row-bg-color: var(--mc-primary-light-5);
+
+  /* ---- Semantic ramps — realign to MateCloud hues (Dify-style) ----
+     EP's dark css-vars hardcode light-3..9 / dark-2 from EP's OWN default
+     hues (#409eff blue, #e6a23c orange, #67c23a green …), so every soft
+     pill / badge / selected-state (rank pills, chips, .on rows, el-tag,
+     menu-active) sat on a muddy OFF-HUE background. Override the whole ramp
+     with solid deep tints blended from our exact palette over the card
+     surface — clean tinted bg + bright accent text, the Dify dark look.
+     Solid (not translucent) so EP's solid button hover/active stay opaque. */
+  --el-color-primary-light-9: #25324C; --el-color-primary-light-8: #2A3A5D; --el-color-primary-light-7: #2E436E; --el-color-primary-light-5: #35528C; --el-color-primary-light-3: #3E63AE; --el-color-primary-dark-2: #78A5FF;
+  --el-color-success-light-9: #1C3834; --el-color-success-light-8: #1C4439; --el-color-success-light-7: #1B4F3E; --el-color-success-light-5: #1A6447; --el-color-success-light-3: #197B52; --el-color-success-dark-2: #4AC38B;
+  --el-color-warning-light-9: #403325; --el-color-warning-light-8: #513C22; --el-color-warning-light-7: #63451F; --el-color-warning-light-5: #81541B; --el-color-warning-light-3: #A46616; --el-color-warning-dark-2: #F9A83F;
+  --el-color-danger-light-9: #3F272C; --el-color-danger-light-8: #50292D; --el-color-danger-light-7: #612C2E; --el-color-danger-light-5: #7E3130; --el-color-danger-light-3: #A03733; --el-color-danger-dark-2: #F36D64;
+  --el-color-error-light-9: #3F272C; --el-color-error-light-8: #50292D; --el-color-error-light-7: #612C2E; --el-color-error-light-5: #7E3130; --el-color-error-light-3: #A03733; --el-color-error-dark-2: #F36D64;
+  --el-color-info-light-9: #292E39; --el-color-info-light-8: #2F3440; --el-color-info-light-7: #343A47; --el-color-info-light-5: #3F4554; --el-color-info-light-3: #4A5262; --el-color-info-dark-2: #888FA0;
+}

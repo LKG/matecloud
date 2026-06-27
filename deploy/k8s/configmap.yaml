@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: matecloud-config
+  namespace: matecloud
+data:
+  SPRING_PROFILES_ACTIVE: "prod"
+  NACOS_HOST: "nacos.matecloud.svc.cluster.local"
+  NACOS_PORT: "8848"
+  # 空 = public 命名空间(与 init-nacos.sh 推送目标一致)。
+  # 如需多环境隔离，可在 Nacos 控制台手动建命名空间后填入其 ID。
+  NACOS_NAMESPACE: ""
+  JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError"

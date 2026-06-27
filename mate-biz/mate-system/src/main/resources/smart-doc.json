@@ -1,0 +1,31 @@
+{
+  "serverUrl": "http://localhost:9030",
+  "isStrict": false,
+  "allInOne": true,
+  "outPath": "./target/smart-doc",
+  "projectName": "mate-system API",
+  "packageFilters": "vip.mate.system.**.trigger.controller",
+  "showAuthor": true,
+  "createDebugPage": true,
+  "style": "xt256",
+  "coverOld": true,
+  "requestHeaders": [
+    {
+      "name": "Authorization",
+      "type": "string",
+      "desc": "Sa-Token",
+      "required": false,
+      "since": "1.0.0"
+    },
+    {
+      "name": "X-Tenant-Id",
+      "type": "string",
+      "desc": "Tenant ID (multi-tenant deployments only)",
+      "required": false,
+      "since": "1.0.0"
+    }
+  ],
+  "responseBodyAdvice": {
+    "className": "vip.mate.base.result.Result"
+  }
+}

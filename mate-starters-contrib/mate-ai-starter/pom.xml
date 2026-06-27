@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>mate-starters-contrib</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-ai-starter</artifactId>
+    <packaging>jar</packaging>
+    <name>mate-ai-starter</name>
+    <description>Native AI support via Spring AI - @Tool registry, Anthropic ChatClient, /api/v1/ai/chat, MCP bridge</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-base</artifactId>
+        </dependency>
+
+        <!-- Chat memory (provides ChatMemory + MessageWindowChatMemory +
+             InMemoryChatMemoryRepository). Always on so multi-turn works. -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-chat-memory</artifactId>
+        </dependency>
+
+        <!-- ============================================================ -->
+        <!-- LLM provider starters. Anthropic is the default; the rest    -->
+        <!-- are optional so downstream services pick and choose.          -->
+        <!-- Select the active one via spring.ai.model.chat=<provider>.    -->
+        <!-- ============================================================ -->
+
+        <!-- Anthropic Claude (default) -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-anthropic</artifactId>
+        </dependency>
+
+        <!-- OpenAI — also used for KIMI/Moonshot via base-url override -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring AI 2.0 移除 zhipuai/minimax 原生模块: GLM/MiniMax 经 OpenAI 兼容端点 (base-url override) -->
+
+        <!-- DeepSeek -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-deepseek</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Ollama (self-hosted) -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-ollama</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- MCP server auto-bridge: every @Tool becomes MCP-accessible at /mcp -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Optional MCP client: consume external MCP servers as additional tools -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

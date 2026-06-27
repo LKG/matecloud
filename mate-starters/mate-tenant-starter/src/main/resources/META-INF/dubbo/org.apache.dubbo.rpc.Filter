@@ -1,0 +1,2 @@
+tenantConsumer=vip.mate.starter.tenant.rpc.TenantDubboConsumerFilter
+tenantProvider=vip.mate.starter.tenant.rpc.TenantDubboProviderFilter

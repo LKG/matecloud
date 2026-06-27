@@ -1,0 +1,284 @@
+/**
+ * MateCloud 文档主题 —— 全面对齐 mate-ui 管理端设计系统
+ * 来源: mate-ui/apps/admin/src/styles/tokens.css
+ *
+ *   主色   #155AEF (hover #004AEB · accent #296DFF · light-5 #EFF4FF)
+ *   语义   success #17B26A · warning #F79009 · danger #F04438
+ *   表面   body #F2F4F7 · soft #F9FAFB · elevated #FFFFFF
+ *   文本   #101828 / #676F83 / #98A2B2
+ *   边框   #EAECF0 · 圆角 8/12/16 · 字体 Inter · 柔和低透明阴影
+ *   LOGO 四色 绿 #00cc8c · 青 #36b0e2 · 橙 #f7a400 · 粉 #f05674
+ */
+
+/* ===================== 字体 ===================== */
+:root {
+  --vp-font-family-base:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* ===================== 配色（亮色） ===================== */
+:root {
+  /* 品牌主色 */
+  --vp-c-brand-1: #155aef;
+  --vp-c-brand-2: #2f6bf1;
+  --vp-c-brand-3: #155aef;
+  --vp-c-brand-soft: rgba(21, 90, 239, 0.1);
+  --vp-c-brand-softer: rgba(21, 90, 239, 0.06);
+
+  /* 表面层（mate-ui surfaces） */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f9fafb;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f2f4f7;
+
+  /* 文本灰阶 */
+  --vp-c-text-1: #101828;
+  --vp-c-text-2: #676f83;
+  --vp-c-text-3: #98a2b2;
+
+  /* 边框 / 分隔 */
+  --vp-c-border: #eaecf0;
+  --vp-c-divider: #eaecf0;
+  --vp-c-gutter: #eaecf0;
+
+  /* 语义色 → 自定义容器(tip/warning/danger)、徽章 */
+  --vp-c-green-1: #17b26a;
+  --vp-c-green-2: #17b26a;
+  --vp-c-green-3: #17b26a;
+  --vp-c-green-soft: rgba(23, 178, 106, 0.12);
+  --vp-c-yellow-1: #b54708;
+  --vp-c-yellow-2: #f79009;
+  --vp-c-yellow-3: #f79009;
+  --vp-c-yellow-soft: rgba(247, 144, 9, 0.12);
+  --vp-c-red-1: #b42318;
+  --vp-c-red-2: #f04438;
+  --vp-c-red-3: #f04438;
+  --vp-c-red-soft: rgba(240, 68, 56, 0.12);
+
+  /* 按钮 */
+  --vp-button-brand-bg: #155aef;
+  --vp-button-brand-hover-bg: #004aeb;
+  --vp-button-brand-active-bg: #004aeb;
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-alt-bg: #ffffff;
+  --vp-button-alt-border: #eaecf0;
+  --vp-button-alt-hover-border: #84adff;
+  --vp-button-alt-hover-bg: #eff4ff;
+  --vp-button-alt-hover-text: #155aef;
+
+  /* 首页 Hero 渐变标题(取 LOGO 绿→青→蓝) */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #00cc8c 0%, #36b0e2 42%, #155aef 100%);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(54, 176, 226, 0.35), rgba(21, 90, 239, 0.4));
+  --vp-home-hero-image-filter: blur(56px);
+
+  /* 阴影（mate-ui 低透明柔和） */
+  --vp-shadow-1: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --vp-shadow-2: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --vp-shadow-3: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+}
+
+/* ===================== 配色（暗色） ===================== */
+.dark {
+  --vp-c-brand-1: #528bff;
+  --vp-c-brand-2: #6b9cff;
+  --vp-c-brand-3: #3b76f0;
+  --vp-c-brand-soft: rgba(82, 139, 255, 0.16);
+  --vp-c-brand-softer: rgba(82, 139, 255, 0.1);
+
+  /* 暗色表面阶梯（body < alt < elevated < soft），mate-ui Dify 风 */
+  --vp-c-bg: #15181e;
+  --vp-c-bg-alt: #111419;
+  --vp-c-bg-elv: #1d212a;
+  --vp-c-bg-soft: #222630;
+
+  --vp-c-text-1: #f7f8fa;
+  --vp-c-text-2: #9ba1ac;
+  --vp-c-text-3: #6e727c;
+
+  --vp-c-border: rgba(200, 206, 218, 0.16);
+  --vp-c-divider: rgba(200, 206, 218, 0.1);
+  --vp-c-gutter: #0f1216;
+
+  --vp-button-brand-bg: #2f6bf1;
+  --vp-button-brand-hover-bg: #528bff;
+  --vp-button-brand-active-bg: #528bff;
+  --vp-button-alt-bg: #1d212a;
+  --vp-button-alt-border: rgba(200, 206, 218, 0.16);
+  --vp-button-alt-hover-border: #3b76f0;
+  --vp-button-alt-hover-bg: rgba(82, 139, 255, 0.1);
+
+  --vp-home-hero-name-background: linear-gradient(120deg, #2af598 0%, #36b0e2 42%, #528bff 100%);
+
+  --vp-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --vp-shadow-2: 0 4px 8px -2px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.15);
+  --vp-shadow-3: 0 12px 16px -4px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.12);
+}
+
+/* ===================== 布局与风格打磨 ===================== */
+
+/* 按钮：圆角 8px + 字重，对齐 mate-ui */
+.VPButton {
+  border-radius: 8px !important;
+  font-weight: 600;
+}
+
+/* Hero：渐变标题 + 顶部品牌 glow（mate-ui --mc-glow） */
+.VPHero .name {
+  letter-spacing: -0.02em;
+}
+.VPHero .text {
+  letter-spacing: -0.01em;
+}
+.VPHome {
+  position: relative;
+}
+.VPHome::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 560px;
+  background: radial-gradient(60% 60% at 50% 0%, rgba(21, 90, 239, 0.1), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+.dark .VPHome::before {
+  background: radial-gradient(60% 60% at 50% 0%, rgba(82, 139, 255, 0.1), transparent 70%);
+}
+
+/* 特性卡：mate-ui 卡片(12px 圆角 + 弱边框 + 柔和阴影 + 悬停抬升) */
+.VPFeature {
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-border);
+  background-color: var(--vp-c-bg-elv);
+  box-shadow: var(--vp-shadow-1);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.VPFeature:hover {
+  transform: translateY(-3px);
+  border-color: var(--vp-c-brand-1);
+  box-shadow: var(--vp-shadow-3);
+}
+.VPFeature .icon {
+  border-radius: 10px;
+  background-color: var(--vp-c-brand-soft) !important;
+}
+
+/* 行内代码：品牌色弱底，更醒目 */
+.vp-doc :not(pre) > code {
+  background-color: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+/* 表格：表头品牌弱底 + 克制斑马纹 + 圆角描边 */
+.vp-doc table {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.vp-doc th {
+  background-color: var(--vp-c-brand-softer);
+  font-weight: 600;
+}
+.vp-doc tr:nth-child(2n) {
+  background-color: var(--vp-c-bg-soft);
+}
+
+/* 导航栏：毛玻璃 + 细分隔（mate-ui header 风） */
+.VPNavBar {
+  backdrop-filter: saturate(180%) blur(8px);
+}
+.VPNavBarMenuLink.active,
+.VPSidebarItem.is-active > .item .link .text {
+  font-weight: 600;
+}
+.VPNavBarTitle .logo {
+  height: 26px;
+}
+
+/* 链接下划线偏移更柔和 */
+.vp-doc a {
+  text-underline-offset: 3px;
+}
+
+/* ===================== 架构全景 SVG（architecture/overview） ===================== */
+.arch-band {
+  fill: var(--vp-c-bg-soft);
+  opacity: 0.55;
+}
+.arch-box {
+  fill: var(--vp-c-bg-elv);
+  stroke: var(--vp-c-border);
+  stroke-width: 1;
+}
+.arch-cap {
+  fill: var(--vp-c-text-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+.arch-t1 {
+  fill: var(--vp-c-text-1);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.arch-t2 {
+  fill: var(--vp-c-text-2);
+  font-size: 10px;
+}
+.arch-flow {
+  stroke: var(--vp-c-brand-1);
+  stroke-width: 1.4;
+  fill: none;
+}
+.arch-lbl {
+  fill: var(--vp-c-text-3);
+  font-size: 10px;
+}
+.arch-brand {
+  fill: var(--vp-c-brand-1);
+  font-size: 10px;
+  font-weight: 600;
+}
+/* arch-flow 用作 ›  箭头符号时需要填充而非描边 */
+text.arch-flow {
+  fill: var(--vp-c-brand-1);
+  stroke: none;
+}
+
+/* 滚动条（mate-ui thumb #C8CDD5 / 暗色 #3A4050） */
+* {
+  scrollbar-color: #c8cdd5 transparent;
+}
+.dark * {
+  scrollbar-color: #3a4050 transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #c8cdd5;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #98a2b2;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #3a4050;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #4a5060;
+}
