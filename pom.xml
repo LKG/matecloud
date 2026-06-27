@@ -110,7 +110,7 @@
         <aws-s3.version>2.46.17</aws-s3.version>
 
         <!-- Logging -->
-        <logstash-logback.version>8.0</logstash-logback.version>
+        <logstash-logback.version>9.0</logstash-logback.version>
 
         <!-- Spring AI (targets Spring Boot 4.x) -->
         <spring-ai.version>2.0.0</spring-ai.version>
