@@ -33,6 +33,28 @@
 
 接入层 → 网关（:9010）→ 业务服务（auth / system / notice，Dubbo RPC + DDD 四层）→ 能力层 Starter → 基础设施（MySQL / Redis / RabbitMQ / Nacos / MinIO），可观测性（Actuator / Prometheus / Tracing）横切。详见 [总体架构文档](mate-ui/apps/docs/architecture/overview.md)。
 
+## 界面预览
+
+> 真实运行截图（前端 admin `:3000` + 后端网关 `:9010`），基于 mate-ui 设计系统。
+
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="docs/screenshots/dashboard.png" alt="工作台"/><br/><sub><b>工作台 · 概览 / 服务健康</b></sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/menus.png" alt="菜单管理"/><br/><sub><b>菜单管理 · RBAC 菜单树</b></sub></td>
+    <td align="center" width="33%"><img src="docs/screenshots/roles.png" alt="角色管理"/><br/><sub><b>角色管理 · 菜单 / 数据权限</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/admins.png" alt="管理员"/><br/><sub><b>管理员 · 分配角色</b></sub></td>
+    <td align="center"><img src="docs/screenshots/dict.png" alt="数据字典"/><br/><sub><b>数据字典 · 类型 / 数据</b></sub></td>
+    <td align="center"><img src="docs/screenshots/config.png" alt="参数配置"/><br/><sub><b>参数配置 · 系统键值</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/identity.png" alt="身份接入"/><br/><sub><b>身份接入 · 企微/钉钉/飞书/LDAP</b></sub></td>
+    <td align="center"><img src="docs/screenshots/gray-release.png" alt="灰度发布"/><br/><sub><b>微服务 · 灰度发布 / 路由测试</b></sub></td>
+    <td align="center"><img src="docs/screenshots/login-log.png" alt="登录审计"/><br/><sub><b>登录审计 · 日志 / UA / 状态</b></sub></td>
+  </tr>
+</table>
+
 ## 使用文档
 
 MateCloud 提供了完整的部署与开发文档，涵盖架构设计、Starter 使用、CLI 命令、前端开发和生产部署等内容。
