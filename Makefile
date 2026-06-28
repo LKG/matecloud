@@ -1,7 +1,7 @@
 # MateCloud Makefile
 # Convenience targets for common dev / ops operations.
 
-.PHONY: help build build-module up down restart logs clean test docs monolith run-monolith
+.PHONY: help build build-module up down restart logs clean test docs monolith run-monolith monolith-up monolith-down
 
 help:
 	@echo "MateCloud Makefile"
@@ -23,6 +23,11 @@ help:
 	@echo ""
 	@echo "  docker-build    Build all service docker images"
 	@echo "  docker-push     Push all service images to registry (REGISTRY=...)"
+	@echo ""
+	@echo "  monolith        Build the single-JVM monolith JAR (-Pmonolith)"
+	@echo "  run-monolith    Run the monolith JAR locally (needs MySQL + Redis)"
+	@echo "  monolith-up     Build + run the monolith in docker (infra + :8080)"
+	@echo "  monolith-down   Stop the monolith container"
 
 build:
 	mvn clean install -DskipTests -B
@@ -72,8 +77,14 @@ docker-push:
 docs:  ## Generate API documentation (Smart-Doc)
 	mvn smart-doc:html -pl mate-biz/mate-system -q
 
-monolith:  ## Build monolith JAR
-	mvn clean package -pl mate-monolith -am -DskipTests -Pmonolith
+monolith:  ## Build monolith JAR (mvn -Pmonolith)
+	mvn -Pmonolith clean package -pl mate-monolith -am -DskipTests -B
 
-run-monolith:  ## Run monolith mode (single JAR, no Dubbo)
-	MATE_RPC_MODE=local java -jar mate-monolith/target/mate-monolith-1.0.0.jar
+run-monolith:  ## Run monolith locally (mode/Nacos come from mate-infra-local.yml)
+	java -jar $$(ls mate-monolith/target/mate-monolith-*.jar | grep -v -- '-exec' | head -n1)
+
+monolith-up:  ## Build + run monolith in docker (infra + single JVM on :8080)
+	docker-compose --profile monolith up -d --build mysql redis mate-monolith
+
+monolith-down:  ## Stop the monolith container
+	docker-compose --profile monolith stop mate-monolith

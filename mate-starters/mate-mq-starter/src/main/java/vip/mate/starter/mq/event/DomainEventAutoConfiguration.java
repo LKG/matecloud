@@ -25,6 +25,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Map;
@@ -35,11 +36,18 @@ import java.util.Map;
  * Declares the shared topic exchange ({@code mate.domain.events}), a dead-letter
  * exchange + queue, and registers the {@link DomainEventListenerRegistrar}
  * {@link org.springframework.beans.factory.config.BeanPostProcessor}.
+ * <p>
+ * This is the cross-service ({@code @DomainEventHandler}) broker fan-out and only
+ * applies in microservice mode. In monolith mode ({@code mate.rpc.mode=local})
+ * domain events stay in-process via Spring's {@code ApplicationEventPublisher} +
+ * {@code @TransactionalEventListener}, so this — and its eager
+ * {@code BeanPostProcessor} — is switched off entirely (no broker required).
  *
  * @author mateaix
  */
 @AutoConfiguration
 @ConditionalOnClass(ConnectionFactory.class)
+@ConditionalOnProperty(name = "mate.rpc.mode", havingValue = "dubbo", matchIfMissing = true)
 public class DomainEventAutoConfiguration {
 
     /**

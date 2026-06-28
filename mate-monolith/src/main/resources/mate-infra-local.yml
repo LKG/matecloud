@@ -1,0 +1,120 @@
+# ============================================================
+# MateCloud Monolith — Local Infrastructure + Mode Overrides
+# ============================================================
+# This is the classpath counterpart of the Nacos `mate-infra-*.yml` that every
+# microservice reads. It is imported LAST by application.yml, so it overrides
+# mate-defaults.yml — the same way a service's Nacos `mate-infra` does.
+#
+# It carries BOTH:
+#   1. the deployment-mode switches that make this a monolith (no Dubbo/Nacos),
+#   2. the infra endpoints (DB/Redis/...) normally served by Nacos.
+# Every endpoint falls back to a localhost default and is env-overridable — point
+# it at `make infra-up` out of the box, or override via MYSQL_HOST / REDIS_HOST.
+# ============================================================
+
+spring:
+  # ---- Deployment mode: monolith ----
+  autoconfigure:
+    exclude:
+      # The first two mirror mate-defaults.yml (this list REPLACES it, so they
+      # must be repeated): Druid/Redisson Boot-3 auto-configs reference classes
+      # moved in Boot 4 — the ds-/cache-starters wire those beans manually.
+      - com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+      # mate-auth self-configures the behaviour captcha; avoid double-registration.
+      - com.xingyuv.captcha.config.AjCaptchaAutoConfiguration
+      # No message broker in monolith mode — domain events dispatch in-process via
+      # Spring events. Excluding Boot's RabbitMQ auto-config means no
+      # ConnectionFactory is created, so nothing reaches for a broker and the
+      # health endpoint stays UP without RabbitMQ running.
+      - org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration
+      # No Dubbo in monolith mode. mate-defaults sets dubbo.scan.base-packages,
+      # which dubbo-spring-boot-autoconfigure honours independently of our
+      # @EnableDubbo (RpcAutoConfiguration) — without these excludes it would
+      # still scan @DubboService beans and export a tri protocol on a random
+      # port. @DubboService providers are simply absent in local mode; in-process
+      # callers use the Local*Adapter beans + IPermissionDomainService directly.
+      - org.apache.dubbo.spring.boot.autoconfigure.DubboAutoConfiguration
+      - org.apache.dubbo.spring.boot.autoconfigure.DubboRelaxedBindingAutoConfiguration
+      - org.apache.dubbo.spring.boot.autoconfigure.DubboListenerAutoConfiguration
+  cloud:
+    nacos:
+      # No registry / config server in monolith mode.
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+  flyway:
+    # system migrations mix DDL + DML in a single script.
+    mixed: true
+
+  # ---- MySQL / Druid ----
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:matecloud123}
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      filters: stat,wall,slf4j
+
+  # ---- Redis / Lettuce ----
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:matecloud123}
+      database: ${REDIS_DB:0}
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2000
+
+mate:
+  # In-process wiring — Dubbo is disabled; cross-service calls go through the
+  # Local*Adapter beans in vip.mate.monolith.adapter.
+  rpc:
+    mode: local
+  # All three modules' Flyway migrations share one history table in the single
+  # schema. Versions are globally unique (system 1.0.x, notice 1.2.1, auth 1.3.1)
+  # so they apply in order under flyway_history_monolith.
+  module:
+    code: monolith
+
+# ---- Sa-Token dedicated Redis (separate logical DB from the cache) ----
+sa-token:
+  active-timeout: -1
+  alone-redis:
+    host: ${SA_TOKEN_REDIS_HOST:${REDIS_HOST:127.0.0.1}}
+    port: ${SA_TOKEN_REDIS_PORT:${REDIS_PORT:6379}}
+    password: ${SA_TOKEN_REDIS_PASSWORD:${REDIS_PASSWORD:matecloud123}}
+    database: ${SA_TOKEN_REDIS_DB:1}
+    timeout: 5000
+
+# ---- MinIO (mate-file-starter) ----
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+  access-key: ${MINIO_ACCESS_KEY:matecloud}
+  secret-key: ${MINIO_SECRET_KEY:matecloud123}
+  bucket-name: ${MINIO_BUCKET:matecloud}
+
+logging:
+  level:
+    vip.mate: info
+    org.apache.dubbo: warn
+    com.alibaba.nacos: warn

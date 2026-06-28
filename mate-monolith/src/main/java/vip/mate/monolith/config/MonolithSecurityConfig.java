@@ -17,6 +17,7 @@ package vip.mate.monolith.config;
 
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.stp.StpUtil;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -33,6 +34,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @author mateaix
  */
 @Configuration
+@ConditionalOnProperty(name = "mate.rpc.mode", havingValue = "local")
 public class MonolithSecurityConfig implements WebMvcConfigurer {
 
     @Override

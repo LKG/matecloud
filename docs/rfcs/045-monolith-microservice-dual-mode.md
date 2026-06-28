@@ -1,10 +1,14 @@
 # RFC-045: 微服务 + 单体双模架构 — 一套代码，两种部署
 
-- **Status**: Draft
+- **Status**: Implemented (2026-06-28) — 见文末「实施记录」
 - **Created**: 2026-04-12
 - **Author**: MateCloud Team
 - **Wave**: 10
 - **Dependencies**: RFC-038, RFC-039
+
+> ⚠️ 本文 Part 1–3 是最初设计草案，部分已过时（端口为 `8080` 非 `9000`；`mate-admin` 已并入
+> `mate-system`；本地适配器为 4 个非 2 个）。**落地的真实方案与若干草案未预见的坑，见文末
+> [实施记录](#实施记录-2026-06-28)。**
 
 > "同一个代码库，`mate.rpc.mode=local` 启动一个 JAR 就是单体，`dubbo` 启动五个进程就是微服务。"
 
@@ -567,3 +571,50 @@ File: `pom.xml`（root）
 - **只有 2 个 Local 适配器**：当前只有 auth→system 有 RPC 调用。如果未来新增跨服务 RPC，只需加对应的 Local 适配器
 - **前端零改动**：API 路径完全一致，只改 base URL
 - **这不是"微服务降级"**：单体模式是一种正式的部署形态，适合中小团队、开发环境、快速验证，不是临时方案
+
+## 实施记录 (2026-06-28)
+
+落地时发现草案漏掉了几个让单体「根本无法启动」的关键问题。最终方案如下，**全部不影响微服务模式**（共享 starter 的改动都用 `matchIfMissing=true` 保留 dubbo 默认行为，或仅在目标历史表为空时触发）。
+
+### 1. 致命前提：业务模块必须能被当作「库」依赖（classifier）
+`mate-auth/system/notice` 原本被 `spring-boot-maven-plugin` 打成可执行胖 JAR（类在 `BOOT-INF/classes/`），**无法作为 Maven 编译依赖** → 单体连编译都过不了。
+- 方案：三个模块的 `spring-boot-maven-plugin` 加 `<classifier>exec</classifier>`。主 JAR 退回瘦库（单体可依赖），`*-exec.jar` 才是可运行胖包（微服务部署用）。
+- 配套：根 `Dockerfile` 与三个服务 `Dockerfile` 改为优先取 `*-exec.jar`。
+
+### 2. 配置优先级陷阱（`spring.config.import`）
+被 `import` 进来的文件**优先级高于** importer 本身（这正是微服务里 Nacos `mate-infra` 能覆盖 `mate-defaults` 的机制）。所以单体写在 `application.yml` 顶层的覆盖项（`mate.rpc.mode=local`、关 Nacos）**全部被 `mate-defaults` 盖掉**，导致单体竟以 dubbo 模式启动、注册 Nacos、自调 Dubbo。
+- 方案：把所有「覆盖 mate-defaults」的项放进**最后 import** 的 `mate-monolith/src/main/resources/mate-infra-local.yml`（它即单体版的「classpath mate-infra」），`application.yml` 只留入口与不冲突项。
+
+### 3. 组合根：排除嵌套的 `@SpringBootApplication`
+`scanBasePackages="vip.mate"` 会把三个服务的 `@SpringBootApplication` 当作 `@Configuration` 扫进来，重新激活它们的 `@EnableDiscoveryClient`/`@EnableAsync`。
+- 方案：`MateMonolithApplication` 用显式 `@ComponentScan` + `excludeFilters` 排除这三个类（并保留 Boot 默认的两个 TypeExclude/AutoConfigurationExclude 过滤器）。
+
+### 4. 单体专有的两处 Bean 冲突（多模块合一才暴露）
+- **Mapper Bean 名冲突**：auth 与 system 各有一个 `LoginLogDao`，简单类名都叫 `loginLogDao` → 冲突。`DataSourceAutoConfiguration` 的 `@MapperScan` 改用 `FullyQualifiedAnnotationBeanNameGenerator`（按类型注入，对微服务透明）。
+- **MyBatis TypeAlias 冲突**：两个 `LoginLogPO` 简单名相同 → 别名重复抛错。项目无任何 XML mapper，`setTypeAliasesPackage(...)` 是死配置 → 直接移除。
+
+### 5. 消除重复：`RolePermissionResolverPort`
+草案的「Local 适配器」会让 `LocalTokenIssuer` 与 `SaTokenIssuer` 90% 重复。改为抽出唯一随模式变化的「按用户查角色/权限」为端口：
+- `SaTokenIssuer` 变为**两模式共用**的唯一 `TokenIssuerPort` 实现，只依赖该端口；
+- `DubboRolePermissionResolver`（auth，dubbo）走 RPC + Redis 兜底；`LocalRolePermissionResolver`（monolith，local）直调 `IPermissionDomainService`。
+- 本地适配器现共 4 个：`UserQuery` / `UserRegistration` / `NoticeDispatcher` / `RolePermissionResolver`。
+
+### 6. 单体无需消息中间件（域事件走进程内）
+真实域事件流本就是 Spring `ApplicationEventPublisher` + `@TransactionalEventListener`，RabbitMQ 那套（`DomainEventAutoConfiguration` 等）是零消费者的跨服务脚手架。
+- 方案：`RabbitMqAutoConfiguration` / `DomainEventAutoConfiguration` 加 `@ConditionalOnProperty(mate.rpc.mode=dubbo, matchIfMissing=true)`；单体再 `spring.autoconfigure.exclude` 掉 Boot 的 `RabbitAutoConfiguration` → 不连 broker、`health: UP`。
+
+### 7. 单体彻底关闭 Dubbo
+`mate-defaults` 的 `dubbo.scan.base-packages` 会让 dubbo-spring-boot-autoconfigure 在无 `@EnableDubbo` 时仍扫描并导出 `@DubboService`。
+- 方案：单体 `spring.autoconfigure.exclude` 掉 `DubboAutoConfiguration` / `DubboRelaxedBindingAutoConfiguration` / `DubboListenerAutoConfiguration`。
+
+### 8. Flyway：一张历史表 + 「领养」既有 schema
+单体所有迁移进单表 `flyway_history_monolith`（`mate.module.code=monolith`，各版本号全局唯一）。难点是**与微服务共用同一个库**时不能重复建表。
+- 修复潜在 bug：`repairThenMigrate` 策略的 `@ConditionalOnClass(name="Flyway")` 用了非全限定名 → 条件永远 false、自愈逻辑从未生效。改为 `@ConditionalOnClass(Flyway.class)`。
+- 扩展 `autoSeedPerServiceHistory`：除遗留单表外，还从**兄弟 `flyway_history_*` 表**把已应用记录播种进目标表（重排 `installed_rank`、跳过 baseline 伪记录、清理 `success=0` 残留）。于是单体首启会「领养」微服务已迁移的 schema → `No migration necessary`；全新库则照常跑全部迁移；二次启动幂等。
+
+### 9. 构建 / 运行
+- `mate-monolith/Dockerfile`（多阶段，`-Pmonolith` 构建）；`docker-compose.yml` 增加 `mate-monolith` 服务并置于 compose `profiles: [monolith]`（默认不随微服务栈启动）。
+- `make monolith` / `run-monolith` / `monolith-up` / `monolith-down`。
+
+### 部署注意
+单体与微服务可共用同一个库（Flyway 自动领养），但**不要同时运行**两套写同一份数据。全新部署直接起单体即可；从微服务库切单体时，首启自动领养，无需手工 SQL。
