@@ -1,7 +1,5 @@
 <p align="center">
-  <img src="mate-ui/apps/admin/src/assets/logo.svg" alt="MateCloud" height="64" />
-  &nbsp;&nbsp;
-  <img src="mate-ui/apps/admin/src/assets/mateaix-wordmark.svg" alt="MATEAIX" height="64" />
+  <img src="mate-ui/apps/admin/src/assets/matecloud-logo.png" alt="MateCloud" height="64" />
 </p>
 
 <p align="center">
@@ -28,7 +26,7 @@
 ## 架构全景
 
 <p align="center">
-  <img src="docs/architecture.svg" alt="MateCloud 架构全景" width="900" />
+  <img src="docs/matecloud-architecture.png" alt="MateCloud 架构全景" width="900" />
 </p>
 
 接入层 → 网关（:9010）→ 业务服务（auth / system / notice，Dubbo RPC + DDD 四层）→ 能力层 Starter → 基础设施（MySQL / Redis / RabbitMQ / Nacos / MinIO），可观测性（Actuator / Prometheus / Tracing）横切。详见 [总体架构文档](mate-ui/apps/docs/architecture/overview.md)。
