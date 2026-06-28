@@ -1,5 +1,8 @@
 server:
-  port: ${SERVER_PORT:8080}
+  # Default to the gateway's port (9010): in monolith mode there is no gateway,
+  # so the monolith answers on 9010 and the frontend's `/api -> 127.0.0.1:9010`
+  # proxy works unchanged — no frontend edits needed.
+  port: ${SERVER_PORT:9010}
 
 spring:
   application:

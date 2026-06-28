@@ -41,7 +41,7 @@ USER mate
 ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
 ENV SPRING_PROFILES_ACTIVE=prod
 
-EXPOSE 8080
+EXPOSE 9010
 
 # Mode switches (mate.rpc.mode=local, Nacos off) come from mate-infra-local.yml
 # on the classpath — no extra env needed. Infra endpoints are overridable below.

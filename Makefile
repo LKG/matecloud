@@ -26,7 +26,7 @@ help:
 	@echo ""
 	@echo "  monolith        Build the single-JVM monolith JAR (-Pmonolith)"
 	@echo "  run-monolith    Run the monolith JAR locally (needs MySQL + Redis)"
-	@echo "  monolith-up     Build + run the monolith in docker (infra + :8080)"
+	@echo "  monolith-up     Build + run the monolith in docker (infra + :9010)"
 	@echo "  monolith-down   Stop the monolith container"
 
 build:
@@ -83,7 +83,7 @@ monolith:  ## Build monolith JAR (mvn -Pmonolith)
 run-monolith:  ## Run monolith locally (mode/Nacos come from mate-infra-local.yml)
 	java -jar $$(ls mate-monolith/target/mate-monolith-*.jar | grep -v -- '-exec' | head -n1)
 
-monolith-up:  ## Build + run monolith in docker (infra + single JVM on :8080)
+monolith-up:  ## Build + run monolith in docker (infra + single JVM on :9010)
 	docker-compose --profile monolith up -d --build mysql redis mate-monolith
 
 monolith-down:  ## Stop the monolith container

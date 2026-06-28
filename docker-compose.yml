@@ -268,7 +268,8 @@ services:
       - mate-net
 
   # ---- Monolith mode (opt-in alternative to the microservice stack above) ----
-  # auth + system + notice in ONE JVM on port 8080; no Nacos, no Dubbo, no broker.
+  # auth + system + notice in ONE JVM on port 9010 (same as the gateway, so the
+  # frontend needs no change); no Nacos, no Dubbo, no broker.
   # Start with:  docker-compose --profile monolith up -d mysql redis mate-monolith
   # It coexists with the microservice DB: Flyway adopts the existing schema instead
   # of re-running migrations (see DataSourceAutoConfiguration#autoSeedPerServiceHistory).
@@ -290,7 +291,7 @@ services:
       REDIS_HOST: redis
       MINIO_ENDPOINT: http://minio:9000
     ports:
-      - "${MATE_MONOLITH_PORT:-8080}:8080"
+      - "${MATE_MONOLITH_PORT:-9010}:9010"
     networks:
       - mate-net
 
