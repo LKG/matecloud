@@ -28,8 +28,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * In microservice mode the gateway (WebFlux) handles token validation before
  * requests reach individual services. In monolith mode there is no gateway,
  * so this interceptor takes over that responsibility by requiring a valid
- * Sa-Token session on all {@code /api/**} endpoints except the public ones
- * (login, register, captcha, SMS).
+ * Sa-Token session on all {@code /api/**} endpoints except the public ones.
+ * <p>
+ * The public list mirrors the gateway's {@code mate.gateway.auth.public-paths}
+ * — these are all pre-login endpoints that carry no token (login / register /
+ * captcha / SMS / SSO / LDAP). Note the captcha path needs the {@code /**}
+ * suffix: the real endpoints are {@code /api/v1/auth/captcha/get|check} (see
+ * {@code CaptchaPlusConfig}); excluding only {@code /api/v1/auth/captcha} let the
+ * interceptor 401 the image fetch, so the slider puzzle never loaded.
+ * (Non-{@code /api} paths like {@code /doc.html} aren't matched by
+ * {@code /api/**}, so they need no entry here.)
  *
  * @author mateaix
  */
@@ -44,8 +52,11 @@ public class MonolithSecurityConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/v1/auth/login",
                         "/api/v1/auth/register",
-                        "/api/v1/auth/captcha",
+                        "/api/v1/auth/captcha/**",
                         "/api/v1/auth/sms/**",
+                        "/api/v1/auth/sso/**",
+                        "/api/v1/auth/ldap/login",
+                        "/api/v1/sso/callback/**",
                         "/actuator/**"
                 );
     }
