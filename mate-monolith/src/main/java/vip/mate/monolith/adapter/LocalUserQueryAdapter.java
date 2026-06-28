@@ -23,11 +23,19 @@ import vip.mate.api.system.response.UserInfoResponse;
 import vip.mate.auth.domain.adapter.port.UserQueryPort;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
 import vip.mate.auth.domain.model.valobj.Account;
-import vip.mate.system.application.query.IUserQueryService;
+import vip.mate.starter.tenant.core.TenantHelper;
+import vip.mate.system.admin.application.query.IAdminQueryService;
 
 /**
  * In-process implementation of {@link UserQueryPort} for monolith mode.
- * Directly calls mate-system's query service instead of Dubbo RPC.
+ * <p>
+ * Authenticates against the back-office account store (<b>mate_admin</b>) via
+ * mate-system's {@link IAdminQueryService} — the same source that
+ * {@code DubboUserQueryAdapter} reaches over Dubbo through
+ * {@code IRpcPermissionService#getAdminForAuthByUsername}. (NOT the end-user
+ * store {@code mate_user} / {@code IUserQueryService} — admins like the seeded
+ * {@code admin} account live in {@code mate_admin}.) {@code mate_admin} is a
+ * global table, so lookups run under {@link TenantHelper#withoutTenant}.
  *
  * @author mateaix
  */
@@ -37,27 +45,24 @@ import vip.mate.system.application.query.IUserQueryService;
 @ConditionalOnProperty(name = "mate.rpc.mode", havingValue = "local")
 public class LocalUserQueryAdapter implements UserQueryPort {
 
-    private final IUserQueryService userQueryService;
+    private final IAdminQueryService adminQueryService;
 
     @Override
     public AuthUser findByAccount(Account account) {
-        UserInfoResponse response = switch (account.kind()) {
-            case USERNAME -> userQueryService.findByUsernameForAuth(account.value());
-            case MOBILE   -> userQueryService.findByMobileForAuth(account.value());
-            case EMAIL    -> userQueryService.findByUsernameForAuth(account.value());
-        };
-        if (response == null) {
-            return null;
-        }
-        return AuthUser.from(response);
+        UserInfoResponse response = TenantHelper.withoutTenant(() -> switch (account.kind()) {
+            case USERNAME -> adminQueryService.findForAuthByUsername(account.value());
+            case MOBILE   -> adminQueryService.findForAuthByMobile(account.value());
+            // EMAIL is not a native admin lookup — fall back to username (matches
+            // DubboUserQueryAdapter's heuristic).
+            case EMAIL    -> adminQueryService.findForAuthByUsername(account.value());
+        });
+        return response == null ? null : AuthUser.from(response);
     }
 
     @Override
     public AuthUser findById(String userId) {
-        UserInfoResponse response = userQueryService.findById(userId);
-        if (response == null) {
-            return null;
-        }
-        return AuthUser.from(response);
+        UserInfoResponse response = TenantHelper.withoutTenant(
+                () -> adminQueryService.findForAuthById(userId));
+        return response == null ? null : AuthUser.from(response);
     }
 }
