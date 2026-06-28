@@ -22,15 +22,23 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.amqp.autoconfigure.RabbitTemplateCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
  * Auto-configuration for RabbitMQ event publishing.
+ * <p>
+ * The broker is only used for cross-service domain-event fan-out, which only
+ * exists in microservice mode. In monolith mode ({@code mate.rpc.mode=local})
+ * domain events are dispatched in-process via Spring's
+ * {@code ApplicationEventPublisher}, so this is disabled and no broker is needed
+ * (mirrors {@code RpcAutoConfiguration}).
  *
  * @author mateaix
  */
 @AutoConfiguration
 @ConditionalOnClass(RabbitTemplate.class)
+@ConditionalOnProperty(name = "mate.rpc.mode", havingValue = "dubbo", matchIfMissing = true)
 public class RabbitMqAutoConfiguration {
 
     @Bean

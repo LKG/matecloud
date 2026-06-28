@@ -41,6 +41,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGenerator;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -50,9 +51,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Auto-configuration for DataSource and MyBatis Plus.
@@ -71,7 +75,12 @@ import java.util.List;
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass({SqlSessionFactory.class, MybatisSqlSessionFactoryBean.class})
-@MapperScan({"vip.mate.**.infrastructure.dao", "vip.mate.**.dao"})
+// Fully-qualified bean names so mappers with the same simple name in different
+// modules (e.g. auth + system both ship a LoginLogDao) don't collide when every
+// module is scanned into one context (monolith mode). Mappers are injected by
+// type, so FQN names are transparent in single-service mode.
+@MapperScan(value = {"vip.mate.**.infrastructure.dao", "vip.mate.**.dao"},
+        nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)
 public class DataSourceAutoConfiguration {
 
     /** The legacy single shared Flyway history table (pre per-service split). */
@@ -123,7 +132,10 @@ public class DataSourceAutoConfiguration {
         factory.setConfiguration(configuration);
 
         factory.setPlugins(mybatisPlusInterceptor);
-        factory.setTypeAliasesPackage("vip.mate.**.infrastructure.dao.po");
+        // No typeAliasesPackage: MyBatis-Plus resolves entities by their Class via
+        // BaseMapper<T>, and the project ships no XML mappers (so no short resultType
+        // aliases are consumed). Registering aliases by simple name would also throw on
+        // duplicates across modules in monolith mode (e.g. auth + system LoginLogPO).
 
         // GlobalConfig — mirrors mybatis-plus.global-config in mate-defaults.yml
         GlobalConfig globalConfig = new GlobalConfig();
@@ -206,7 +218,7 @@ public class DataSourceAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(FlywayMigrationStrategy.class)
-    @ConditionalOnClass(name = "Flyway")
+    @ConditionalOnClass(Flyway.class)
     @ConditionalOnProperty(
             prefix = "spring.flyway", name = "repair-on-migrate",
             havingValue = "true", matchIfMissing = true)
@@ -240,44 +252,160 @@ public class DataSourceAutoConfiguration {
         try (Connection conn = flyway.getConfiguration().getDataSource().getConnection()) {
             String product = conn.getMetaData().getDatabaseProductName();
             if (product == null || !product.toLowerCase().contains("mysql")) {
-                return; // only persistent MySQL carries legacy history; H2 is fresh
+                return; // only persistent MySQL carries history to adopt; H2 is fresh
             }
-            if (!tableExists(conn, LEGACY_FLYWAY_TABLE)) {
-                return; // nothing to migrate from (fresh DB)
-            }
-            boolean newExists = tableExists(conn, table);
-            if (newExists && rowCount(conn, table) > 0) {
-                return; // already seeded / migrated — no-op
-            }
+            // This app's versioned migration scripts, in version order. Skip the
+            // "<< Flyway Baseline >>" pseudo-entry — the target keeps its own baseline.
             List<String> scripts = new ArrayList<>();
             for (MigrationInfo mi : flyway.info().all()) {
-                if (mi.getScript() != null && !mi.getScript().isBlank()) {
-                    scripts.add(mi.getScript());
+                String script = mi.getScript();
+                if (script != null && !script.isBlank() && !script.startsWith("<<")) {
+                    scripts.add(script);
                 }
             }
             if (scripts.isEmpty()) {
                 return;
             }
-            if (!newExists) {
+            boolean targetExists = tableExists(conn, table);
+            if (targetExists && appliedScriptCount(conn, table, scripts) >= scripts.size()) {
+                return; // already fully seeded / migrated — no-op
+            }
+            // Pull already-applied rows for our scripts from every OTHER Flyway history
+            // table in this schema: the legacy single `flyway_schema_history` AND sibling
+            // per-service tables (flyway_history_auth/system/notice/...). This is what lets
+            // the monolith adopt a database the microservices already migrated (and the
+            // reverse), instead of re-running CREATE TABLE and colliding.
+            List<String> sources = discoverHistoryTables(conn, table);
+            Map<String, AppliedRow> applied = collectAppliedRows(conn, sources, scripts);
+            if (applied.isEmpty()) {
+                return; // fresh schema — let migrate() create everything
+            }
+            if (!targetExists) {
                 try (Statement st = conn.createStatement()) {
-                    st.execute("CREATE TABLE `" + table + "` LIKE `" + LEGACY_FLYWAY_TABLE + "`");
+                    st.execute("CREATE TABLE `" + table + "` LIKE `" + sources.get(0) + "`");
+                }
+            } else {
+                // Drop half-failed rows so they neither fail validation nor collide with seeds.
+                try (Statement st = conn.createStatement()) {
+                    st.executeUpdate("DELETE FROM `" + table + "` WHERE success = 0");
                 }
             }
-            String placeholders = String.join(",", Collections.nCopies(scripts.size(), "?"));
-            String sql = "INSERT IGNORE INTO `" + table + "` SELECT * FROM `" + LEGACY_FLYWAY_TABLE
-                    + "` WHERE script IN (" + placeholders + ")";
+            int rank = (int) maxInstalledRank(conn, table);
+            int seeded = 0;
+            String insert = "INSERT IGNORE INTO `" + table + "` (installed_rank, version, description, "
+                    + "type, script, checksum, installed_by, installed_on, execution_time, success) "
+                    + "VALUES (?,?,?,?,?,?,?,NOW(),?,1)";
+            try (PreparedStatement ps = conn.prepareStatement(insert)) {
+                for (String script : scripts) {   // version order
+                    AppliedRow row = applied.get(script);
+                    if (row == null) {
+                        continue;
+                    }
+                    rank++;
+                    ps.setInt(1, rank);
+                    ps.setString(2, row.version);
+                    ps.setString(3, row.description);
+                    ps.setString(4, row.type);
+                    ps.setString(5, row.script);
+                    if (row.checksum == null) {
+                        ps.setNull(6, Types.INTEGER);
+                    } else {
+                        ps.setInt(6, row.checksum);
+                    }
+                    ps.setString(7, row.installedBy);
+                    ps.setInt(8, row.executionTime);
+                    ps.addBatch();
+                    seeded++;
+                }
+                ps.executeBatch();
+            }
+            log.info("[flyway] history adoption: seeded {} applied row(s) into `{}` from {} "
+                    + "— schema already migrated by another deployment topology", seeded, table, sources);
+        } catch (Exception e) {
+            // Never block boot on the seed itself; repair+migrate still run. If the seed
+            // could not complete, migrate may fail loudly (same as before this fix).
+            log.warn("[flyway] history auto-seed skipped for `{}`: {}", table, e.toString());
+        }
+    }
+
+    /** A successfully-applied migration row copied from another history table. */
+    private record AppliedRow(String version, String description, String type, String script,
+                              Integer checksum, String installedBy, int executionTime) {
+    }
+
+    /** Count of this app's scripts already recorded as successful in {@code table}. */
+    private static int appliedScriptCount(Connection conn, String table, List<String> scripts)
+            throws SQLException {
+        String placeholders = String.join(",", Collections.nCopies(scripts.size(), "?"));
+        String sql = "SELECT COUNT(*) FROM `" + table + "` WHERE success = 1 AND script IN ("
+                + placeholders + ")";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (int i = 0; i < scripts.size(); i++) {
+                ps.setString(i + 1, scripts.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        }
+    }
+
+    /** Legacy {@code flyway_schema_history} + sibling {@code flyway_history_*} tables (excluding target). */
+    private static List<String> discoverHistoryTables(Connection conn, String target) throws SQLException {
+        List<String> tables = new ArrayList<>();
+        try (ResultSet rs = conn.getMetaData()
+                .getTables(conn.getCatalog(), null, "flyway%", new String[]{"TABLE"})) {
+            while (rs.next()) {
+                String name = rs.getString("TABLE_NAME");
+                if (name == null || name.equalsIgnoreCase(target)) {
+                    continue;
+                }
+                if (name.equalsIgnoreCase(LEGACY_FLYWAY_TABLE) || name.startsWith("flyway_history_")) {
+                    tables.add(name);
+                }
+            }
+        }
+        return tables;
+    }
+
+    /** Map of script -> applied row, gathered from the source tables (first hit wins). */
+    private static Map<String, AppliedRow> collectAppliedRows(
+            Connection conn, List<String> sources, List<String> scripts) throws SQLException {
+        Map<String, AppliedRow> applied = new LinkedHashMap<>();
+        if (sources.isEmpty()) {
+            return applied;
+        }
+        String placeholders = String.join(",", Collections.nCopies(scripts.size(), "?"));
+        for (String src : sources) {
+            String sql = "SELECT version, description, type, script, checksum, installed_by, "
+                    + "execution_time FROM `" + src + "` WHERE success = 1 AND script IN ("
+                    + placeholders + ")";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 for (int i = 0; i < scripts.size(); i++) {
                     ps.setString(i + 1, scripts.get(i));
                 }
-                int n = ps.executeUpdate();
-                log.info("[flyway] per-service history transition: seeded {} applied row(s) into `{}` "
-                        + "from `{}` (this service's scripts)", n, table, LEGACY_FLYWAY_TABLE);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        String script = rs.getString("script");
+                        int checksum = rs.getInt("checksum");
+                        applied.putIfAbsent(script, new AppliedRow(
+                                rs.getString("version"),
+                                rs.getString("description"),
+                                rs.getString("type"),
+                                script,
+                                rs.wasNull() ? null : checksum,
+                                rs.getString("installed_by"),
+                                rs.getInt("execution_time")));
+                    }
+                }
             }
-        } catch (Exception e) {
-            // Never block boot on the seed itself; repair+migrate still run. If the seed
-            // could not complete, migrate may fail loudly (same as before this fix).
-            log.warn("[flyway] per-service history auto-seed skipped for `{}`: {}", table, e.toString());
+        }
+        return applied;
+    }
+
+    private static long maxInstalledRank(Connection conn, String table) throws SQLException {
+        try (Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT COALESCE(MAX(installed_rank),0) FROM `" + table + "`")) {
+            return rs.next() ? rs.getLong(1) : 0L;
         }
     }
 
@@ -288,10 +416,4 @@ public class DataSourceAutoConfiguration {
         }
     }
 
-    private static long rowCount(Connection conn, String table) throws SQLException {
-        try (Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM `" + table + "`")) {
-            return rs.next() ? rs.getLong(1) : 0L;
-        }
-    }
 }

@@ -267,6 +267,33 @@ services:
     networks:
       - mate-net
 
+  # ---- Monolith mode (opt-in alternative to the microservice stack above) ----
+  # auth + system + notice in ONE JVM on port 8080; no Nacos, no Dubbo, no broker.
+  # Start with:  docker-compose --profile monolith up -d mysql redis mate-monolith
+  # It coexists with the microservice DB: Flyway adopts the existing schema instead
+  # of re-running migrations (see DataSourceAutoConfiguration#autoSeedPerServiceHistory).
+  mate-monolith:
+    profiles: ["monolith"]
+    build:
+      context: .
+      dockerfile: mate-monolith/Dockerfile
+    container_name: mate-monolith
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      # Infra hosts = compose service names (placeholders default to 127.0.0.1,
+      # which inside a container would be the container itself).
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      MINIO_ENDPOINT: http://minio:9000
+    ports:
+      - "${MATE_MONOLITH_PORT:-8080}:8080"
+    networks:
+      - mate-net
+
   # ---- Frontend (Vue 3 admin, served by nginx; proxies /api → mate-gateway) ----
   mate-ui:
     build:

@@ -104,6 +104,12 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Dual-role module: runnable service AND a library consumed by mate-monolith.
+                         classifier keeps the thin mate-auth.jar as the main (library) artifact and
+                         emits mate-auth-exec.jar as the executable fat jar for microservice deploy. -->
+                    <classifier>exec</classifier>
+                </configuration>
             </plugin>
         </plugins>
     </build>
