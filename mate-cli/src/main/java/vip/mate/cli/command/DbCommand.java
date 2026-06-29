@@ -21,11 +21,11 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.config.DbConfig;
 import vip.mate.cli.config.DbConfigLoader;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Table;
 
 import java.io.File;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Command(name = "db", description = "Database operations",
         subcommands = {DbCommand.QuerySub.class, DbCommand.DescribeSub.class, DbCommand.MigrateSub.class})
@@ -76,12 +76,12 @@ public class DbCommand implements Runnable {
             String quotedTable = quoteIdentifier(table);
             DbConfig.ServiceDb db = DbConfigLoader.getServiceDb(service);
             try (Connection conn = DriverManager.getConnection(db.getUrl(), db.getUsername(), db.getPassword())) {
-                System.out.println("=== Columns ===");
+                System.out.println(Ansi.heading("Columns"));
                 try (Statement stmt = conn.createStatement();
                      ResultSet rs = stmt.executeQuery("SHOW FULL COLUMNS FROM " + quotedTable)) {
                     printResultSet(rs);
                 }
-                System.out.println("\n=== Indexes ===");
+                System.out.println("\n" + Ansi.heading("Indexes"));
                 try (Statement stmt = conn.createStatement();
                      ResultSet rs = stmt.executeQuery("SHOW INDEX FROM " + quotedTable)) {
                     printResultSet(rs);
@@ -89,7 +89,7 @@ public class DbCommand implements Runnable {
                 try (Statement stmt = conn.createStatement();
                      ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS row_count FROM " + quotedTable)) {
                     if (rs.next()) {
-                        System.out.println("\nRow count: " + rs.getLong("row_count"));
+                        System.out.println("\n" + Ansi.bold("Row count: ") + rs.getLong("row_count"));
                     }
                 }
             } catch (SQLException e) {
@@ -145,40 +145,24 @@ public class DbCommand implements Runnable {
     static void printResultSet(ResultSet rs) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         int colCount = meta.getColumnCount();
-        List<String[]> rows = new ArrayList<>();
         String[] headers = new String[colCount];
-        int[] widths = new int[colCount];
         for (int i = 1; i <= colCount; i++) {
             headers[i - 1] = meta.getColumnLabel(i);
-            widths[i - 1] = headers[i - 1].length();
         }
+        Table table = Table.of(headers).maxWidth(50);
+        int n = 0;
         while (rs.next()) {
-            String[] row = new String[colCount];
+            Object[] cells = new Object[colCount];
             for (int i = 1; i <= colCount; i++) {
                 String val = rs.getString(i);
-                row[i - 1] = val != null ? val : "NULL";
-                widths[i - 1] = Math.max(widths[i - 1], Math.min(row[i - 1].length(), 50));
+                cells[i - 1] = val != null ? val : "NULL";
             }
-            rows.add(row);
+            table.row(cells);
+            n++;
         }
-        StringBuilder sep = new StringBuilder("+");
-        StringBuilder hdr = new StringBuilder("|");
-        for (int i = 0; i < colCount; i++) {
-            sep.append("-".repeat(widths[i] + 2)).append("+");
-            hdr.append(" ").append(String.format("%-" + widths[i] + "s", headers[i])).append(" |");
-        }
-        System.out.println(sep);
-        System.out.println(hdr);
-        System.out.println(sep);
-        for (String[] row : rows) {
-            StringBuilder line = new StringBuilder("|");
-            for (int i = 0; i < colCount; i++) {
-                String val = row[i].length() > 50 ? row[i].substring(0, 47) + "..." : row[i];
-                line.append(" ").append(String.format("%-" + widths[i] + "s", val)).append(" |");
-            }
-            System.out.println(line);
-        }
-        System.out.println(sep);
-        System.out.println(rows.size() + " row(s)");
+        // Grey out NULLs so real values stand out.
+        table.styler((c, raw, padded) -> "NULL".equals(raw) ? Ansi.muted(padded) : padded)
+                .print(System.out);
+        System.out.println(Ansi.muted(n + " row(s)"));
     }
 }

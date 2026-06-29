@@ -19,6 +19,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.config.CliConfig;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Table;
 
 import java.io.*;
 import java.net.Socket;
@@ -224,22 +226,22 @@ public class CacheCommand implements Runnable {
                 } while (!"0".equals(cursor) && allKeys.size() < limit);
 
                 if (allKeys.isEmpty()) {
-                    System.out.println("(no keys matching '" + pattern + "')");
+                    System.out.println(Ansi.muted("(no keys matching '" + pattern + "')"));
                     return;
                 }
 
                 // Get type for each key
-                System.out.printf("%-60s %s%n", "KEY", "TYPE");
-                System.out.println("-".repeat(75));
+                Table table = Table.of("KEY", "TYPE").maxWidth(64);
                 for (String key : allKeys) {
                     redis.sendCommand("TYPE", key);
                     Object typeReply = redis.readReply();
                     String type = typeReply != null ? String.valueOf(typeReply) : "?";
-                    String display = key.length() > 60 ? key.substring(0, 57) + "..." : key;
-                    System.out.printf("%-60s %s%n", display, type);
+                    table.row(key, type);
                 }
+                table.styler((c, raw, padded) -> c == 1 ? Ansi.cyan(padded) : padded).print(System.out);
                 System.out.println();
-                System.out.println(allKeys.size() + " key(s)" + (allKeys.size() >= limit ? " (limit reached)" : ""));
+                System.out.println(Ansi.muted(allKeys.size() + " key(s)"
+                        + (allKeys.size() >= limit ? " (limit reached)" : "")));
             } catch (IOException e) {
                 System.err.println("Redis error: " + e.getMessage());
             }

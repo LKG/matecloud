@@ -19,6 +19,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.nacos.NacosClient;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Table;
 
 import java.util.List;
 import java.util.Map;
@@ -52,11 +54,8 @@ public class RpcCommand implements Runnable {
                     return;
                 }
 
-                // Filter for Dubbo provider services (convention: prefixed with "providers:")
-                // Nacos Dubbo services typically register with the interface name directly
-                System.out.printf("%-50s %-14s %-10s %-10s%n", "SERVICE NAME", "GROUP", "VERSION", "INSTANCES");
-                System.out.println("-".repeat(90));
-
+                // Nacos Dubbo services typically register with the interface name directly.
+                Table table = Table.of("SERVICE NAME", "GROUP", "VERSION", "INSTANCES").maxWidth(50);
                 int count = 0;
                 for (String name : services) {
                     List<Map<String, Object>> instances = nacos.listInstances(name);
@@ -79,12 +78,12 @@ public class RpcCommand implements Runnable {
                             }
                         }
                     }
-                    System.out.printf("%-50s %-14s %-10s %-10d%n",
-                            truncate(name, 50), group, version, instances.size());
+                    table.row(name, group, version, instances.size());
                     count++;
                 }
+                table.print(System.out);
                 System.out.println();
-                System.out.println(count + " service(s) found.");
+                System.out.println(Ansi.muted(count + " service(s) found."));
             } catch (Exception e) {
                 System.err.println("Failed to query Nacos: " + e.getMessage());
                 System.err.println();

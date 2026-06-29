@@ -18,6 +18,8 @@ package vip.mate.cli.command;
 import picocli.CommandLine.Command;
 import vip.mate.cli.http.JsonHttpClient;
 import vip.mate.cli.nacos.NacosClient;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Table;
 
 import java.util.List;
 import java.util.Map;
@@ -35,39 +37,39 @@ public class StatusCommand implements Runnable {
     public void run() {
         NacosClient nacos = new NacosClient();
         JsonHttpClient http = new JsonHttpClient();
-        System.out.println("MateCloud cluster status");
-        System.out.println("Nacos: " + nacos.getServerAddr()
-                + "  namespace=" + nacos.getNamespace());
+        System.out.println(Ansi.heading("MateCloud cluster status"));
+        System.out.println(Ansi.muted("Nacos: " + nacos.getServerAddr()
+                + "  namespace=" + nacos.getNamespace()));
         System.out.println();
 
         List<String> services;
         try {
             services = nacos.listServices();
         } catch (Exception e) {
-            System.err.println("Failed to reach Nacos: " + e.getMessage());
+            System.err.println(Ansi.fail("Failed to reach Nacos: ") + e.getMessage());
             return;
         }
         if (services.isEmpty()) {
-            System.out.println("(no services registered)");
+            System.out.println(Ansi.muted("(no services registered)"));
             return;
         }
 
-        System.out.printf("%-18s %-22s %-8s %s%n",
-                "SERVICE", "ENDPOINT", "HEALTH", "INFO");
-        System.out.println("-".repeat(80));
+        Table table = Table.of("SERVICE", "ENDPOINT", "HEALTH", "INFO").maxWidth(48);
         for (String svc : services) {
             List<Map<String, Object>> instances = nacos.listInstances(svc);
             if (instances.isEmpty()) {
-                System.out.printf("%-18s %-22s %-8s %s%n", svc, "(none)", "-", "-");
+                table.row(svc, "(none)", "-", "-");
                 continue;
             }
             for (Map<String, Object> inst : instances) {
                 String ep = inst.get("ip") + ":" + inst.get("port");
                 String health = probe(http, "http://" + ep + "/actuator/health");
                 String info = probeVersion(http, "http://" + ep + "/actuator/info");
-                System.out.printf("%-18s %-22s %-8s %s%n", svc, ep, health, info);
+                table.row(svc, ep, health, info);
             }
         }
+        table.styler((col, raw, padded) -> col == 2 ? Ansi.statusColor(raw, padded) : padded)
+                .print(System.out);
     }
 
     private String probe(JsonHttpClient http, String url) {

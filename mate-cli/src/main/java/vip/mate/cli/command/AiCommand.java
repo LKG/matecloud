@@ -21,6 +21,9 @@ import picocli.CommandLine.Parameters;
 import vip.mate.cli.config.CliConfig;
 import vip.mate.cli.http.JsonHttpClient;
 import vip.mate.cli.nacos.NacosClient;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Spinner;
+import vip.mate.cli.render.Table;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -55,8 +58,7 @@ public class AiCommand implements Runnable {
                 System.out.println("(no AI-enabled services found)");
                 return;
             }
-            System.out.printf("%-30s %-18s %s%n", "TOOL", "SERVICE", "DESCRIPTION");
-            System.out.println("-".repeat(90));
+            Table table = Table.of("TOOL", "SERVICE", "DESCRIPTION").maxWidth(60);
             for (String ep : endpoints) {
                 try {
                     Map<String, Object> resp = http.get(ep + "/api/v1/ai/tools");
@@ -65,21 +67,25 @@ public class AiCommand implements Runnable {
                     String svcLabel = labelFor(ep);
                     for (Object t : list) {
                         if (!(t instanceof Map<?, ?> m)) continue;
-                        String name = String.valueOf(m.get("name"));
-                        String desc = String.valueOf(m.get("description"));
-                        if (desc.length() > 50) desc = desc.substring(0, 50) + "...";
-                        System.out.printf("%-30s %-18s %s%n", name, svcLabel, desc);
+                        table.row(m.get("name"), svcLabel, m.get("description"));
                     }
                 } catch (Exception e) {
-                    System.err.println("[warn] " + ep + " — " + e.getMessage());
+                    System.err.println(Ansi.warn("[warn] ") + ep + " — " + e.getMessage());
                 }
             }
+            table.styler((col, raw, padded) -> col == 0 ? Ansi.cyan(padded) : padded)
+                    .print(System.out);
         }
     }
 
     /** {@code mate ai chat "What users signed up today?"} */
     @Command(name = "chat", description = "Ask the AI; it will pick + call @Tool methods automatically")
     public static class ChatSub implements Runnable {
+        /** Streaming first-token watchdog + retry tuning. */
+        private static final long FIRST_TOKEN_TIMEOUT_MS = 30_000L;
+        private static final int STREAM_RETRIES = 2;
+        private static final long RETRY_BACKOFF_MS = 1_500L;
+
         @Parameters(index = "0..*", description = "Your question")
         List<String> message;
 
@@ -101,12 +107,47 @@ public class AiCommand implements Runnable {
             body.put("message", question);
             body.put("conversationId",
                     conversationId == null ? "mate-cli-" + UUID.randomUUID() : conversationId);
+
+            JsonHttpClient http = new JsonHttpClient();
+            Spinner spinner = new Spinner("thinking");
+            boolean[] firstToken = {false};
+            spinner.start();
             try {
-                Map<String, Object> resp = new JsonHttpClient().postJson(endpoint + "/api/v1/ai/chat", body);
+                // Try streaming first (SSE), with one retry if no token arrives in time.
+                boolean streamed = false;
+                for (int attempt = 1; attempt <= STREAM_RETRIES && !streamed; attempt++) {
+                    streamed = http.postStream(endpoint + "/api/v1/ai/chat/stream", body, token -> {
+                        if (!firstToken[0]) {
+                            spinner.stop();
+                            firstToken[0] = true;
+                        }
+                        System.out.print(token);
+                        System.out.flush();
+                    }, FIRST_TOKEN_TIMEOUT_MS);
+                    if (!streamed && attempt < STREAM_RETRIES) {
+                        try {
+                            Thread.sleep(RETRY_BACKOFF_MS);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            break;
+                        }
+                    }
+                }
+                if (streamed) {
+                    System.out.println();
+                    return;
+                }
+                // Streaming unavailable (older service / timeout) → blocking fallback.
+                spinner.stop();
+                Map<String, Object> resp = http.postJson(endpoint + "/api/v1/ai/chat", body);
                 Object data = resp.get("data");
-                System.out.println(data == null ? "(empty response)" : data);
+                System.out.println(data == null ? Ansi.muted("(empty response)") : data);
             } catch (Exception e) {
-                System.err.println("Chat failed: " + e.getMessage());
+                spinner.stop();
+                if (firstToken[0]) {
+                    System.out.println();
+                }
+                System.err.println(Ansi.fail("Chat failed: ") + e.getMessage());
             }
         }
     }

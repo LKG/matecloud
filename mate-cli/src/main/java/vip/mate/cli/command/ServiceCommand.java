@@ -19,6 +19,8 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.http.JsonHttpClient;
 import vip.mate.cli.nacos.NacosClient;
+import vip.mate.cli.render.Ansi;
+import vip.mate.cli.render.Table;
 
 import java.util.List;
 import java.util.Map;
@@ -39,24 +41,25 @@ public class ServiceCommand implements Runnable {
         @Override
         public void run() {
             NacosClient nacos = new NacosClient();
-            System.out.println("Nacos: " + nacos.getServerAddr()
+            System.out.println(Ansi.heading("Nacos") + "  " + Ansi.muted(nacos.getServerAddr()
                     + "  namespace=" + nacos.getNamespace()
-                    + "  group=" + nacos.getGroup());
+                    + "  group=" + nacos.getGroup()));
             try {
                 List<String> services = nacos.listServices();
                 if (services.isEmpty()) {
-                    System.out.println("(no services registered)");
+                    System.out.println(Ansi.muted("(no services registered)"));
                     return;
                 }
                 System.out.println();
-                System.out.printf("%-24s %s%n", "SERVICE", "INSTANCES");
-                System.out.println("-".repeat(60));
+                Table table = Table.of("SERVICE", "INSTANCES");
                 for (String name : services) {
                     int count = nacos.listInstances(name).size();
-                    System.out.printf("%-24s %d%n", name, count);
+                    table.row(name, count);
                 }
+                table.styler((col, raw, padded) -> col == 1 && "0".equals(raw)
+                        ? Ansi.warn(padded) : padded).print(System.out);
             } catch (Exception e) {
-                System.err.println("Failed to query Nacos: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed to query Nacos: ") + e.getMessage());
             }
         }
     }
@@ -75,11 +78,12 @@ public class ServiceCommand implements Runnable {
                     System.out.println("No instances for " + name);
                     return;
                 }
-                System.out.println("Service: " + name);
+                System.out.println(Ansi.heading("Service: ") + name);
                 for (Map<String, Object> inst : instances) {
+                    String healthy = String.valueOf(inst.get("healthy"));
                     System.out.printf("  - %s:%s  healthy=%s  weight=%s%n",
                             inst.get("ip"), inst.get("port"),
-                            inst.get("healthy"), inst.get("weight"));
+                            Ansi.statusColor(healthy, healthy), inst.get("weight"));
                 }
             } catch (Exception e) {
                 System.err.println("Failed: " + e.getMessage());
@@ -95,24 +99,24 @@ public class ServiceCommand implements Runnable {
             JsonHttpClient http = new JsonHttpClient();
             try {
                 List<String> services = nacos.listServices();
-                System.out.printf("%-24s %-22s %s%n", "SERVICE", "ENDPOINT", "STATUS");
-                System.out.println("-".repeat(70));
+                Table table = Table.of("SERVICE", "ENDPOINT", "STATUS");
                 for (String svc : services) {
                     List<Map<String, Object>> instances = nacos.listInstances(svc);
                     if (instances.isEmpty()) {
-                        System.out.printf("%-24s %-22s %s%n", svc, "(none)", "-");
+                        table.row(svc, "(none)", "-");
                         continue;
                     }
                     for (Map<String, Object> inst : instances) {
                         String ep = inst.get("ip") + ":" + inst.get("port");
-                        String url = "http://" + ep + "/actuator/health";
-                        String body = http.tryGetString(url);
+                        String body = http.tryGetString("http://" + ep + "/actuator/health");
                         String status = body == null
                                 ? "UNREACHABLE"
                                 : body.contains("\"UP\"") ? "UP" : "DOWN";
-                        System.out.printf("%-24s %-22s %s%n", svc, ep, status);
+                        table.row(svc, ep, status);
                     }
                 }
+                table.styler((col, raw, padded) -> col == 2 ? Ansi.statusColor(raw, padded) : padded)
+                        .print(System.out);
             } catch (Exception e) {
                 System.err.println("Failed: " + e.getMessage());
             }
