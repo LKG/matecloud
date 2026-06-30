@@ -75,11 +75,16 @@ import java.util.Map;
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass({SqlSessionFactory.class, MybatisSqlSessionFactoryBean.class})
+// One glob: "vip.mate.**.dao" already matches any package ending in `.dao` at any
+// depth (incl. `…infrastructure.dao`), so a second `…infrastructure.dao` pattern
+// only made MyBatis scan every mapper twice (harmless but ~20 "Skipping
+// MapperFactoryBean … already defined" warnings on each boot).
+//
 // Fully-qualified bean names so mappers with the same simple name in different
 // modules (e.g. auth + system both ship a LoginLogDao) don't collide when every
 // module is scanned into one context (monolith mode). Mappers are injected by
 // type, so FQN names are transparent in single-service mode.
-@MapperScan(value = {"vip.mate.**.infrastructure.dao", "vip.mate.**.dao"},
+@MapperScan(value = "vip.mate.**.dao",
         nameGenerator = FullyQualifiedAnnotationBeanNameGenerator.class)
 public class DataSourceAutoConfiguration {
 

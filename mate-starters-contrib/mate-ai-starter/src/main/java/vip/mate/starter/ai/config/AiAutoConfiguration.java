@@ -68,9 +68,15 @@ public class AiAutoConfiguration implements WebMvcConfigurer {
     }
 
 
+    /**
+     * {@code static} because {@link AiToolRegistry} is a {@code BeanPostProcessor}:
+     * a static factory method lets Spring instantiate it early without forcing this
+     * whole {@code @Configuration} to initialise first (silences the
+     * "not eligible for getting processed by all BeanPostProcessors" warning).
+     */
     @Bean
     @ConditionalOnMissingBean
-    public AiToolRegistry aiToolRegistry() {
+    public static AiToolRegistry aiToolRegistry() {
         log.info("[mate-ai] AI tool registry activated (Spring AI @Tool + ToolCallbackProvider)");
         return new AiToolRegistry();
     }
