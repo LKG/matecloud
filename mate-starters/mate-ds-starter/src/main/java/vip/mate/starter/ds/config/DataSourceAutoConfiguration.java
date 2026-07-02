@@ -73,7 +73,11 @@ import java.util.Map;
  * @author mateaix
  */
 @Slf4j
-@AutoConfiguration
+// Order BEFORE Spring Boot's own DataSourceAutoConfiguration so our tuned Druid
+// bean (below) wins the @ConditionalOnMissingBean(DataSource) race — otherwise
+// Boot's DataSourceConfiguration.Generic builds a Druid from spring.datasource.type
+// but ignores the spring.datasource.druid.* pool/monitor tuning (stat/wall/slf4j).
+@AutoConfiguration(beforeName = "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
 @ConditionalOnClass({SqlSessionFactory.class, MybatisSqlSessionFactoryBean.class})
 // One glob: "vip.mate.**.dao" already matches any package ending in `.dao` at any
 // depth (incl. `…infrastructure.dao`), so a second `…infrastructure.dao` pattern
@@ -102,7 +106,7 @@ public class DataSourceAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(DataSource.class)
-    @ConditionalOnClass(name = "DruidDataSource")
+    @ConditionalOnClass(DruidDataSource.class)
     @ConditionalOnProperty(
             prefix = "spring.datasource.dynamic", name = "enabled",
             havingValue = "false", matchIfMissing = true)
