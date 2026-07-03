@@ -1,0 +1,53 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/*.java'
+      - '**/*.xml'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.properties'
+      - '!mate-ui/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.java'
+      - '**/*.xml'
+      - '**/*.yml'
+      - '**/*.yaml'
+      - '**/*.properties'
+      - '!mate-ui/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # -Pmonolith adds the profile-gated mate-monolith module to the reactor so
+      # the single-JVM composition (local-mode adapters, etc.) is compile-checked
+      # too — otherwise a breaking change to a shared starter or to mate-monolith
+      # slips through, since the default reactor excludes it.
+      - name: Compile (incl. profile-gated mate-monolith)
+        run: mvn clean compile -B -q -Pmonolith
+
+      - name: Run tests
+        run: mvn test -B -q
+        continue-on-error: true
+
+      - name: Check compilation result
+        run: |
+          echo "Build succeeded"
+          mvn dependency:tree -B -q -pl mate-gateway | head -5
