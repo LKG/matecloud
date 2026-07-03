@@ -19,12 +19,16 @@ package vip.mate.cli.render;
  * Minimal ANSI styling for terminal output — no external dependency (keeps
  * mate-cli framework-free). Colour is auto-disabled when output is piped or
  * {@code NO_COLOR} is set, and can be forced with {@code MATE_COLOR=always|never}.
+ * <p>
+ * Styles are composed as a single SGR sequence + one reset (e.g. {@code heading}
+ * is {@code ESC[1;36m…ESC[0m}), so nesting never emits doubled reset codes.
  *
  * @author mateaix
  */
 public final class Ansi {
 
-    private static final String RESET = "[0m";
+    private static final char ESC = '';
+    private static final String RESET = ESC + "[0m";
     private static final boolean ENABLED = resolve();
 
     private Ansi() {
@@ -51,23 +55,24 @@ public final class Ansi {
         return ENABLED;
     }
 
-    private static String wrap(String code, String s) {
-        return ENABLED ? code + s + RESET : s;
+    /** Wrap {@code s} in one SGR sequence ({@code params}, e.g. "1;36") + reset. */
+    private static String sgr(String params, String s) {
+        return ENABLED ? ESC + "[" + params + "m" + s + RESET : s;
     }
 
-    public static String bold(String s)    { return wrap("[1m", s); }
-    public static String dim(String s)      { return wrap("[2m", s); }
-    public static String red(String s)      { return wrap("[31m", s); }
-    public static String green(String s)    { return wrap("[32m", s); }
-    public static String yellow(String s)   { return wrap("[33m", s); }
-    public static String blue(String s)     { return wrap("[34m", s); }
-    public static String magenta(String s)  { return wrap("[35m", s); }
-    public static String cyan(String s)     { return wrap("[36m", s); }
+    public static String bold(String s)     { return sgr("1", s); }
+    public static String dim(String s)      { return sgr("2", s); }
+    public static String red(String s)      { return sgr("31", s); }
+    public static String green(String s)    { return sgr("32", s); }
+    public static String yellow(String s)   { return sgr("33", s); }
+    public static String blue(String s)     { return sgr("34", s); }
+    public static String magenta(String s)  { return sgr("35", s); }
+    public static String cyan(String s)     { return sgr("36", s); }
 
     // ---- Semantic helpers ----
 
-    /** Section / table title. */
-    public static String heading(String s) { return bold(cyan(s)); }
+    /** Section / table title (bold cyan, single sequence). */
+    public static String heading(String s) { return sgr("1;36", s); }
 
     /** Secondary / structural text (rules, hints). */
     public static String muted(String s)   { return dim(s); }

@@ -16,6 +16,7 @@
 package vip.mate.cli.command;
 
 import picocli.CommandLine.Command;
+import vip.mate.cli.render.Ansi;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.nacos.NacosClient;
@@ -105,7 +106,7 @@ public class ConfigCommand implements Runnable {
             try {
                 System.out.println(new NacosClient().getConfig(dataId, group));
             } catch (Exception e) {
-                System.err.println("Failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed: " + e.getMessage()));
             }
         }
     }
@@ -128,7 +129,7 @@ public class ConfigCommand implements Runnable {
                 boolean ok = new NacosClient().publishConfig(dataId, group, content);
                 System.out.println((ok ? "[OK] " : "[FAIL] ") + "Pushed " + dataId);
             } catch (Exception e) {
-                System.err.println("Failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed: " + e.getMessage()));
             }
         }
     }
@@ -147,7 +148,7 @@ public class ConfigCommand implements Runnable {
                 boolean ok = new NacosClient().deleteConfig(dataId, group);
                 System.out.println((ok ? "[OK] " : "[FAIL] ") + "Deleted " + dataId);
             } catch (Exception e) {
-                System.err.println("Failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed: " + e.getMessage()));
             }
         }
     }

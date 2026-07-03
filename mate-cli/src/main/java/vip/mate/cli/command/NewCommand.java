@@ -16,6 +16,7 @@
 package vip.mate.cli.command;
 
 import picocli.CommandLine.Command;
+import vip.mate.cli.render.Ansi;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import vip.mate.cli.template.AggregateTemplate;
@@ -73,7 +74,7 @@ public class NewCommand implements Runnable {
                 System.out.println("  (no mate-system / mate-gateway edits needed — see docs/conventions/pluggable-module-guide.md)");
                 return 0;
             } catch (Exception e) {
-                System.err.println("Failed to create module: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed to create module: " + e.getMessage()));
                 return 1;
             }
         }
@@ -99,7 +100,7 @@ public class NewCommand implements Runnable {
                 System.out.println("Created aggregate: " + name + " in module " + module);
                 return 0;
             } catch (Exception e) {
-                System.err.println("Failed to create aggregate: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed to create aggregate: " + e.getMessage()));
                 return 1;
             }
         }

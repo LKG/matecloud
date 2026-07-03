@@ -86,7 +86,7 @@ public class ServiceCommand implements Runnable {
                             Ansi.statusColor(healthy, healthy), inst.get("weight"));
                 }
             } catch (Exception e) {
-                System.err.println("Failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed: " + e.getMessage()));
             }
         }
     }
@@ -118,7 +118,7 @@ public class ServiceCommand implements Runnable {
                 table.styler((col, raw, padded) -> col == 2 ? Ansi.statusColor(raw, padded) : padded)
                         .print(System.out);
             } catch (Exception e) {
-                System.err.println("Failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed: " + e.getMessage()));
             }
         }
     }

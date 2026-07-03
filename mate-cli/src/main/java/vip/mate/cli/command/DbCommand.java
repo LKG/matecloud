@@ -58,7 +58,7 @@ public class DbCommand implements Runnable {
                     System.out.println("Affected rows: " + affected);
                 }
             } catch (SQLException e) {
-                System.err.println("SQL error: " + e.getMessage());
+                System.err.println(Ansi.fail("SQL error: " + e.getMessage()));
             }
         }
     }
@@ -93,7 +93,7 @@ public class DbCommand implements Runnable {
                     }
                 }
             } catch (SQLException e) {
-                System.err.println("SQL error: " + e.getMessage());
+                System.err.println(Ansi.fail("SQL error: " + e.getMessage()));
             }
         }
     }
@@ -117,7 +117,7 @@ public class DbCommand implements Runnable {
                 result.migrations.forEach(m ->
                         System.out.println("  " + m.version + " - " + m.description));
             } catch (Exception e) {
-                System.err.println("Migration failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Migration failed: " + e.getMessage()));
             }
         }
 

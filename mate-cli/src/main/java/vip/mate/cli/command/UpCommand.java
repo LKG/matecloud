@@ -16,6 +16,7 @@
 package vip.mate.cli.command;
 
 import picocli.CommandLine.Command;
+import vip.mate.cli.render.Ansi;
 import picocli.CommandLine.Option;
 
 import java.io.IOException;
@@ -90,7 +91,7 @@ public class UpCommand implements Runnable {
             return p.waitFor();
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
-            System.err.println("Command failed: " + e.getMessage());
+            System.err.println(Ansi.fail("Command failed: " + e.getMessage()));
             return -1;
         }
     }

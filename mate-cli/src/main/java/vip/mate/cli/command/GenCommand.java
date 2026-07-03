@@ -16,6 +16,7 @@
 package vip.mate.cli.command;
 
 import picocli.CommandLine.Command;
+import vip.mate.cli.render.Ansi;
 import picocli.CommandLine.Option;
 import vip.mate.cli.template.GenCodeTemplate;
 
@@ -47,7 +48,7 @@ public class GenCommand implements Runnable {
                 GenCodeTemplate template = new GenCodeTemplate(table, module, service, projectRoot);
                 template.generate();
             } catch (Exception e) {
-                System.err.println("Code generation failed: " + e.getMessage());
+                System.err.println(Ansi.fail("Code generation failed: " + e.getMessage()));
                 e.printStackTrace();
             }
         }

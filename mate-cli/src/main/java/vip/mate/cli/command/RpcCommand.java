@@ -85,7 +85,7 @@ public class RpcCommand implements Runnable {
                 System.out.println();
                 System.out.println(Ansi.muted(count + " service(s) found."));
             } catch (Exception e) {
-                System.err.println("Failed to query Nacos: " + e.getMessage());
+                System.err.println(Ansi.fail("Failed to query Nacos: " + e.getMessage()));
                 System.err.println();
                 System.err.println("Troubleshooting:");
                 System.err.println("  1. Ensure Nacos is running: make infra-up");
@@ -163,7 +163,7 @@ public class RpcCommand implements Runnable {
 
         @Override
         public void run() {
-            System.out.println("RPC Interface: " + interfaceName);
+            System.out.println(Ansi.heading("RPC Interface: ") + interfaceName);
             System.out.println();
             System.out.println("To view interface documentation, use one of these approaches:");
             System.out.println();
@@ -185,18 +185,18 @@ public class RpcCommand implements Runnable {
                 boolean found = false;
                 for (String svc : services) {
                     if (svc.contains(interfaceName) || interfaceName.contains(svc)) {
-                        System.out.println("     Found matching service: " + svc);
-                        List<Map<String, Object>> instances = nacos.listInstances(svc);
-                        for (Map<String, Object> inst : instances) {
-                            System.out.printf("       - %s:%s  metadata=%s%n",
-                                    inst.get("ip"), inst.get("port"), inst.get("metadata"));
+                        System.out.println("     " + Ansi.ok("Found matching service: ") + svc);
+                        Table t = Table.of("ENDPOINT", "METADATA").maxWidth(80);
+                        for (Map<String, Object> inst : nacos.listInstances(svc)) {
+                            t.row(inst.get("ip") + ":" + inst.get("port"), inst.get("metadata"));
                         }
+                        t.print(System.out);
                         found = true;
                     }
                 }
                 if (!found) {
-                    System.out.println("     No Nacos service found matching '" + interfaceName + "'");
-                    System.out.println("     (Nacos may be offline or the service may not be running)");
+                    System.out.println(Ansi.muted("     No Nacos service found matching '" + interfaceName + "'"));
+                    System.out.println(Ansi.muted("     (Nacos may be offline or the service may not be running)"));
                 }
             } catch (Exception e) {
                 System.out.println("     Could not query Nacos: " + e.getMessage());

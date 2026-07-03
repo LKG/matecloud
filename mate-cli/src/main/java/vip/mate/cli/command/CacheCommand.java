@@ -243,7 +243,7 @@ public class CacheCommand implements Runnable {
                 System.out.println(Ansi.muted(allKeys.size() + " key(s)"
                         + (allKeys.size() >= limit ? " (limit reached)" : "")));
             } catch (IOException e) {
-                System.err.println("Redis error: " + e.getMessage());
+                System.err.println(Ansi.fail("Redis error: " + e.getMessage()));
             }
         }
     }
@@ -261,60 +261,59 @@ public class CacheCommand implements Runnable {
                 Object typeReply = redis.readReply();
                 String type = typeReply != null ? String.valueOf(typeReply) : "none";
 
-                System.out.println("Key:  " + key);
-                System.out.println("Type: " + type);
+                System.out.println(Ansi.bold("Key:  ") + key);
+                System.out.println(Ansi.bold("Type: ") + Ansi.cyan(type));
 
                 // Get TTL
                 redis.sendCommand("TTL", key);
                 Object ttlReply = redis.readReply();
                 long ttl = ttlReply instanceof Long l ? l : -1;
-                System.out.println("TTL:  " + (ttl == -1 ? "no expiry" : ttl == -2 ? "(key not found)" : ttl + "s"));
+                System.out.println(Ansi.bold("TTL:  ")
+                        + (ttl == -1 ? "no expiry" : ttl == -2 ? "(key not found)" : ttl + "s"));
                 System.out.println();
 
                 switch (type) {
                     case "string" -> {
                         redis.sendCommand("GET", key);
                         Object val = redis.readReply();
-                        System.out.println("Value:");
-                        System.out.println(val != null ? val : "(nil)");
+                        System.out.println(Ansi.heading("Value"));
+                        System.out.println(val != null ? val : Ansi.muted("(nil)"));
                     }
                     case "hash" -> {
                         redis.sendCommand("HGETALL", key);
                         Object val = redis.readReply();
                         if (val instanceof List<?> list) {
-                            System.out.println("Hash entries:");
+                            Table t = Table.of("FIELD", "VALUE").maxWidth(64);
                             for (int i = 0; i + 1 < list.size(); i += 2) {
-                                System.out.printf("  %s = %s%n", list.get(i), list.get(i + 1));
+                                t.row(list.get(i), list.get(i + 1));
                             }
+                            t.styler((c, raw, p) -> c == 0 ? Ansi.cyan(p) : p).print(System.out);
                         }
                     }
                     case "list" -> {
                         redis.sendCommand("LLEN", key);
                         Object lenReply = redis.readReply();
                         long len = lenReply instanceof Long l ? l : 0;
-                        System.out.println("List length: " + len);
-
-                        // Show first 20 elements
                         int show = (int) Math.min(len, 20);
                         redis.sendCommand("LRANGE", key, "0", String.valueOf(show - 1));
                         Object val = redis.readReply();
+                        System.out.println(Ansi.muted("list length " + len + ", showing first " + show));
                         if (val instanceof List<?> list) {
-                            System.out.println("Elements (first " + show + "):");
+                            Table t = Table.of("INDEX", "VALUE").maxWidth(72);
                             for (int i = 0; i < list.size(); i++) {
-                                System.out.printf("  [%d] %s%n", i, list.get(i));
+                                t.row(i, list.get(i));
                             }
+                            t.styler((c, raw, p) -> c == 0 ? Ansi.muted(p) : p).print(System.out);
                         }
                     }
                     case "set" -> {
                         redis.sendCommand("SCARD", key);
                         Object cardReply = redis.readReply();
                         long card = cardReply instanceof Long l ? l : 0;
-                        System.out.println("Set cardinality: " + card);
-
                         redis.sendCommand("SMEMBERS", key);
                         Object val = redis.readReply();
+                        System.out.println(Ansi.muted("cardinality " + card + " (max 100 shown)"));
                         if (val instanceof List<?> list) {
-                            System.out.println("Members (max 100):");
                             int i = 0;
                             for (Object m : list) {
                                 System.out.println("  " + m);
@@ -326,23 +325,23 @@ public class CacheCommand implements Runnable {
                         redis.sendCommand("ZCARD", key);
                         Object cardReply = redis.readReply();
                         long card = cardReply instanceof Long l ? l : 0;
-                        System.out.println("Sorted set cardinality: " + card);
-
                         int show = (int) Math.min(card, 20);
                         redis.sendCommand("ZRANGE", key, "0", String.valueOf(show - 1), "WITHSCORES");
                         Object val = redis.readReply();
+                        System.out.println(Ansi.muted("cardinality " + card + ", showing first " + show));
                         if (val instanceof List<?> list) {
-                            System.out.println("Members (first " + show + "):");
+                            Table t = Table.of("MEMBER", "SCORE").maxWidth(64);
                             for (int i = 0; i + 1 < list.size(); i += 2) {
-                                System.out.printf("  %s  (score=%s)%n", list.get(i), list.get(i + 1));
+                                t.row(list.get(i), list.get(i + 1));
                             }
+                            t.styler((c, raw, p) -> c == 1 ? Ansi.yellow(p) : p).print(System.out);
                         }
                     }
-                    case "none" -> System.out.println("Key does not exist.");
-                    default -> System.out.println("Unsupported type: " + type);
+                    case "none" -> System.out.println(Ansi.warn("Key does not exist."));
+                    default -> System.out.println(Ansi.warn("Unsupported type: " + type));
                 }
             } catch (IOException e) {
-                System.err.println("Redis error: " + e.getMessage());
+                System.err.println(Ansi.fail("Redis error: " + e.getMessage()));
             }
         }
     }
@@ -414,7 +413,7 @@ public class CacheCommand implements Runnable {
                     System.out.println("Deleted " + deleted + " key(s) matching '" + key + "'");
                 }
             } catch (IOException e) {
-                System.err.println("Redis error: " + e.getMessage());
+                System.err.println(Ansi.fail("Redis error: " + e.getMessage()));
             }
         }
     }
