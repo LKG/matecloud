@@ -80,12 +80,12 @@ public class CacheCommand implements Runnable {
     /**
      * A tiny Redis client that speaks RESP over a raw TCP socket.
      */
-    static class RedisConnection implements AutoCloseable {
+    public static class RedisConnection implements AutoCloseable {
         private final Socket socket;
         private final OutputStream out;
         private final BufferedInputStream in;
 
-        RedisConnection() throws IOException {
+        public RedisConnection() throws IOException {
             String host = redisHost();
             int port = redisPort();
             try {
@@ -119,7 +119,7 @@ public class CacheCommand implements Runnable {
             }
         }
 
-        void sendCommand(String... parts) throws IOException {
+        public void sendCommand(String... parts) throws IOException {
             StringBuilder sb = new StringBuilder();
             sb.append('*').append(parts.length).append("\r\n");
             for (String p : parts) {
@@ -149,7 +149,7 @@ public class CacheCommand implements Runnable {
         }
 
         /** Read a RESP reply: simple string, error, integer, bulk string, or array. */
-        Object readReply() throws IOException {
+        public Object readReply() throws IOException {
             String line = readLine();
             if (line == null || line.isEmpty()) return null;
             char type = line.charAt(0);

@@ -25,8 +25,10 @@ import java.io.PrintStream;
 import java.sql.*;
 import java.util.*;
 
+import vip.mate.cli.command.CacheCommand;
 import vip.mate.cli.config.DbConfig;
 import vip.mate.cli.config.DbConfigLoader;
+import vip.mate.cli.http.JsonHttpClient;
 import vip.mate.cli.nacos.NacosClient;
 
 /**
@@ -36,11 +38,16 @@ import vip.mate.cli.nacos.NacosClient;
  * to stdout. Supports the MCP handshake (initialize, notifications/initialized)
  * and tool execution (tools/list, tools/call).
  *
- * <p>Available tools:
+ * <p>Available tools — let Claude Code drive the whole platform read-only:
  * <ul>
  *   <li>{@code db_describe} — describe a database table structure</li>
  *   <li>{@code db_query} — execute a read-only SQL query</li>
  *   <li>{@code service_list} — list services registered in Nacos</li>
+ *   <li>{@code service_info} — instance detail (ip/port/health/weight) for one service</li>
+ *   <li>{@code status} — one-screen cluster overview (health + info per instance)</li>
+ *   <li>{@code rpc_list} — Dubbo RPC interfaces + group/version from Nacos</li>
+ *   <li>{@code cache_get} — read a Redis key (type-aware)</li>
+ *   <li>{@code config_get} — fetch a Nacos config by dataId</li>
  * </ul>
  *
  * @author mateaix
@@ -153,6 +160,56 @@ public class McpServerMode {
                         "properties", Map.of()
                 )));
 
+        // service_info
+        tools.add(toolDef("service_info",
+                "Show instance details (ip:port, health, weight) for one Nacos service",
+                Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "name", Map.of("type", "string", "description", "Service name (e.g., mate-system)")
+                        ),
+                        "required", List.of("name")
+                )));
+
+        // status
+        tools.add(toolDef("status",
+                "One-screen cluster overview: every Nacos instance with its /actuator/health and startup info",
+                Map.of(
+                        "type", "object",
+                        "properties", Map.of()
+                )));
+
+        // rpc_list
+        tools.add(toolDef("rpc_list",
+                "List Dubbo RPC services registered in Nacos with their group/version/instance count",
+                Map.of(
+                        "type", "object",
+                        "properties", Map.of()
+                )));
+
+        // cache_get
+        tools.add(toolDef("cache_get",
+                "Read a Redis key (auto-detects string/hash/list/set/zset) with its TTL",
+                Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "key", Map.of("type", "string", "description", "Redis key")
+                        ),
+                        "required", List.of("key")
+                )));
+
+        // config_get
+        tools.add(toolDef("config_get",
+                "Fetch a Nacos config center entry by dataId (e.g., mate-infra-dev.yml)",
+                Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "dataId", Map.of("type", "string", "description", "Config dataId (e.g., mate-infra-dev.yml)"),
+                                "group", Map.of("type", "string", "description", "Config group (default: DEFAULT_GROUP)", "default", "DEFAULT_GROUP")
+                        ),
+                        "required", List.of("dataId")
+                )));
+
         sendResult(id, Map.of("tools", tools));
     }
 
@@ -184,6 +241,11 @@ public class McpServerMode {
                 case "db_describe" -> executeDbDescribe(arguments);
                 case "db_query" -> executeDbQuery(arguments);
                 case "service_list" -> executeServiceList();
+                case "service_info" -> executeServiceInfo(arguments);
+                case "status" -> executeStatus();
+                case "rpc_list" -> executeRpcList();
+                case "cache_get" -> executeCacheGet(arguments);
+                case "config_get" -> executeConfigGet(arguments);
                 default -> throw new IllegalArgumentException("Unknown tool: " + toolName);
             };
             sendToolResult(id, result, false);
@@ -290,6 +352,178 @@ public class McpServerMode {
         }
 
         return sb.toString();
+    }
+
+    private String executeServiceInfo(Map<String, Object> args) {
+        String name = args.get("name") == null ? null : args.get("name").toString();
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("'name' parameter is required");
+        }
+        List<Map<String, Object>> instances = new NacosClient().listInstances(name);
+        if (instances.isEmpty()) {
+            return "No instances for " + name;
+        }
+        StringBuilder sb = new StringBuilder("Service: " + name + "\n");
+        for (Map<String, Object> inst : instances) {
+            sb.append(String.format("  - %s:%s  healthy=%s  weight=%s%n",
+                    inst.get("ip"), inst.get("port"), inst.get("healthy"), inst.get("weight")));
+        }
+        return sb.toString();
+    }
+
+    private String executeStatus() {
+        NacosClient nacos = new NacosClient();
+        JsonHttpClient http = new JsonHttpClient();
+        StringBuilder sb = new StringBuilder();
+        sb.append("Nacos: ").append(nacos.getServerAddr())
+                .append("  namespace=").append(nacos.getNamespace()).append("\n\n");
+        List<String> services;
+        try {
+            services = nacos.listServices();
+        } catch (Exception e) {
+            return sb.append("Failed to reach Nacos: ").append(e.getMessage()).toString();
+        }
+        if (services.isEmpty()) {
+            return sb.append("(no services registered)").toString();
+        }
+        sb.append(String.format("%-18s %-22s %-8s %s%n", "SERVICE", "ENDPOINT", "HEALTH", "INFO"));
+        sb.append("-".repeat(70)).append("\n");
+        for (String svc : services) {
+            List<Map<String, Object>> instances = nacos.listInstances(svc);
+            if (instances.isEmpty()) {
+                sb.append(String.format("%-18s %-22s %-8s %s%n", svc, "(none)", "-", "-"));
+                continue;
+            }
+            for (Map<String, Object> inst : instances) {
+                String ep = inst.get("ip") + ":" + inst.get("port");
+                String body = http.tryGetString("http://" + ep + "/actuator/health");
+                String health = body == null ? "DOWN" : (body.contains("\"UP\"") ? "UP" : "DOWN");
+                String info = probeVersion(http, "http://" + ep + "/actuator/info");
+                sb.append(String.format("%-18s %-22s %-8s %s%n", svc, ep, health, info));
+            }
+        }
+        return sb.toString();
+    }
+
+    private String probeVersion(JsonHttpClient http, String url) {
+        String body = http.tryGetString(url);
+        if (body == null) {
+            return "";
+        }
+        int idx = body.indexOf("\"startupTime\"");
+        if (idx > 0) {
+            int colon = body.indexOf(':', idx);
+            int end = body.indexOf('"', colon + 3);
+            if (colon > 0 && end > 0) {
+                return "up-since=" + body.substring(colon + 2, end);
+            }
+        }
+        return body.length() > 50 ? body.substring(0, 50) + "..." : body;
+    }
+
+    private String executeRpcList() {
+        NacosClient nacos = new NacosClient();
+        List<String> services = nacos.listServices();
+        if (services.isEmpty()) {
+            return "(no services registered in Nacos)";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%-50s %-14s %-10s %s%n", "SERVICE NAME", "GROUP", "VERSION", "INSTANCES"));
+        sb.append("-".repeat(90)).append("\n");
+        for (String name : services) {
+            List<Map<String, Object>> instances = nacos.listInstances(name);
+            String group = "-";
+            String version = "-";
+            if (!instances.isEmpty() && instances.get(0).get("metadata") instanceof Map<?, ?> md) {
+                if (md.containsKey("dubbo.tag")) {
+                    group = String.valueOf(md.get("dubbo.tag"));
+                } else if (md.containsKey("group")) {
+                    group = String.valueOf(md.get("group"));
+                }
+                if (md.containsKey("version")) {
+                    version = String.valueOf(md.get("version"));
+                }
+            }
+            String shown = name.length() > 50 ? name.substring(0, 47) + "..." : name;
+            sb.append(String.format("%-50s %-14s %-10s %d%n", shown, group, version, instances.size()));
+        }
+        return sb.toString();
+    }
+
+    private String executeCacheGet(Map<String, Object> args) {
+        String key = args.get("key") == null ? null : args.get("key").toString();
+        if (key == null || key.isBlank()) {
+            throw new IllegalArgumentException("'key' parameter is required");
+        }
+        StringBuilder sb = new StringBuilder();
+        try (CacheCommand.RedisConnection redis = new CacheCommand.RedisConnection()) {
+            redis.sendCommand("TYPE", key);
+            String type = String.valueOf(redis.readReply());
+            redis.sendCommand("TTL", key);
+            Object ttlReply = redis.readReply();
+            long ttl = ttlReply instanceof Long l ? l : -1;
+            sb.append("Key:  ").append(key).append("\n");
+            sb.append("Type: ").append(type).append("\n");
+            sb.append("TTL:  ").append(ttl == -1 ? "no expiry" : ttl == -2 ? "(key not found)" : ttl + "s")
+                    .append("\n\n");
+            switch (type) {
+                case "string" -> {
+                    redis.sendCommand("GET", key);
+                    Object v = redis.readReply();
+                    sb.append(v != null ? v : "(nil)");
+                }
+                case "hash" -> {
+                    redis.sendCommand("HGETALL", key);
+                    if (redis.readReply() instanceof List<?> list) {
+                        for (int i = 0; i + 1 < list.size(); i += 2) {
+                            sb.append(list.get(i)).append(" = ").append(list.get(i + 1)).append("\n");
+                        }
+                    }
+                }
+                case "list" -> {
+                    redis.sendCommand("LRANGE", key, "0", "99");
+                    if (redis.readReply() instanceof List<?> list) {
+                        for (int i = 0; i < list.size(); i++) {
+                            sb.append("[").append(i).append("] ").append(list.get(i)).append("\n");
+                        }
+                    }
+                }
+                case "set" -> {
+                    redis.sendCommand("SMEMBERS", key);
+                    if (redis.readReply() instanceof List<?> list) {
+                        list.forEach(m -> sb.append(m).append("\n"));
+                    }
+                }
+                case "zset" -> {
+                    redis.sendCommand("ZRANGE", key, "0", "99", "WITHSCORES");
+                    if (redis.readReply() instanceof List<?> list) {
+                        for (int i = 0; i + 1 < list.size(); i += 2) {
+                            sb.append(list.get(i)).append("  (score=").append(list.get(i + 1)).append(")\n");
+                        }
+                    }
+                }
+                case "none" -> sb.append("Key does not exist.");
+                default -> sb.append("Unsupported type: ").append(type);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Redis error: " + e.getMessage());
+        }
+        return sb.toString();
+    }
+
+    private String executeConfigGet(Map<String, Object> args) {
+        String dataId = args.get("dataId") == null ? null : args.get("dataId").toString();
+        if (dataId == null || dataId.isBlank()) {
+            throw new IllegalArgumentException("'dataId' parameter is required");
+        }
+        String group = args.get("group") == null ? null : args.get("group").toString();
+        NacosClient nacos = new NacosClient();
+        String content = nacos.getConfig(dataId, group);
+        if (content == null || content.isEmpty()) {
+            return "(config not found: " + dataId + " group="
+                    + (group == null ? nacos.getGroup() : group) + ")";
+        }
+        return content;
     }
 
     // ----------------------------------------------------------------
