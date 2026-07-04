@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * {@code mate ai tools|chat|providers}
@@ -40,11 +39,12 @@ import java.util.UUID;
  * (env {@code MATE_ADMIN_URL}).
  */
 @Command(name = "ai", description = "AI tool inspection and conversational chat",
-        subcommands = {AiCommand.ToolsSub.class, AiCommand.ChatSub.class, AiCommand.ProvidersSub.class})
+        subcommands = {AiCommand.ToolsSub.class, AiCommand.ChatSub.class, AiCommand.ProvidersSub.class,
+                AiCommand.SessionsSub.class, AiCommand.ShowSub.class, AiCommand.ForkSub.class})
 public class AiCommand implements Runnable {
     @Override
     public void run() {
-        System.out.println("Usage: mate ai <tools|chat|providers>");
+        System.out.println("Usage: mate ai <tools|chat|providers|sessions|show|fork>");
     }
 
     /** Aggregates /api/v1/ai/tools across every Nacos-registered service. */
@@ -92,25 +92,37 @@ public class AiCommand implements Runnable {
         @Option(names = "--service", description = "Target service (default: admin)")
         String service;
 
-        @Option(names = "--conversation", description = "Conversation id for multi-turn memory")
+        @Option(names = {"--conversation", "--resume"},
+                description = "Continue an existing conversation by id (see 'mate ai sessions')")
         String conversationId;
+
+        @Option(names = "--new", description = "Force a brand-new conversation (ignore any default id)")
+        boolean forceNew;
 
         @Override
         public void run() {
             if (message == null || message.isEmpty()) {
-                System.err.println("Missing message. Usage: mate ai chat \"your question\"");
+                System.err.println(Ansi.fail("Missing message. Usage: mate ai chat \"your question\" [--resume <id>]"));
                 return;
             }
             String endpoint = resolveEndpoint(service);
             String question = String.join(" ", message);
+            String sessionId = (conversationId != null && !forceNew)
+                    ? conversationId : AiSessionStore.newId();
+            AiSessionStore.Session session = AiSessionStore.loadOrCreate(sessionId);
+            if (conversationId != null && !forceNew && AiSessionStore.load(sessionId) != null) {
+                System.out.println(Ansi.muted("↻ resuming " + sessionId
+                        + " (" + session.turns.size() / 2 + " prior turns)"));
+            }
+
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("message", question);
-            body.put("conversationId",
-                    conversationId == null ? "mate-cli-" + UUID.randomUUID() : conversationId);
+            body.put("conversationId", sessionId);
 
             JsonHttpClient http = new JsonHttpClient();
             Spinner spinner = new Spinner("thinking");
             boolean[] firstToken = {false};
+            StringBuilder reply = new StringBuilder();
             spinner.start();
             try {
                 // Try streaming first (SSE), with one retry if no token arrives in time.
@@ -123,6 +135,7 @@ public class AiCommand implements Runnable {
                         }
                         System.out.print(token);
                         System.out.flush();
+                        reply.append(token);
                     }, FIRST_TOKEN_TIMEOUT_MS);
                     if (!streamed && attempt < STREAM_RETRIES) {
                         try {
@@ -133,15 +146,19 @@ public class AiCommand implements Runnable {
                         }
                     }
                 }
-                if (streamed) {
+                if (!streamed) {
+                    // Streaming unavailable (older service / timeout) → blocking fallback.
+                    spinner.stop();
+                    Map<String, Object> resp = http.postJson(endpoint + "/api/v1/ai/chat", body);
+                    Object data = resp.get("data");
+                    reply.append(data == null ? "" : data);
+                    System.out.println(data == null ? Ansi.muted("(empty response)") : data);
+                } else {
                     System.out.println();
-                    return;
                 }
-                // Streaming unavailable (older service / timeout) → blocking fallback.
-                spinner.stop();
-                Map<String, Object> resp = http.postJson(endpoint + "/api/v1/ai/chat", body);
-                Object data = resp.get("data");
-                System.out.println(data == null ? Ansi.muted("(empty response)") : data);
+                AiSessionStore.record(session, question, reply.toString());
+                System.out.println(Ansi.muted("session: " + sessionId + "   (resume: mate ai chat --resume "
+                        + sessionId + " \"...\")"));
             } catch (Exception e) {
                 spinner.stop();
                 if (firstToken[0]) {
@@ -149,6 +166,73 @@ public class AiCommand implements Runnable {
                 }
                 System.err.println(Ansi.fail("Chat failed: ") + e.getMessage());
             }
+        }
+    }
+
+    /** {@code mate ai sessions} — list saved conversations. */
+    @Command(name = "sessions", description = "List saved chat sessions (resume with 'ai chat --resume <id>')")
+    public static class SessionsSub implements Runnable {
+        @Override
+        public void run() {
+            List<AiSessionStore.Session> sessions = AiSessionStore.list();
+            if (sessions.isEmpty()) {
+                System.out.println(Ansi.muted("(no saved sessions — start one with: mate ai chat \"...\")"));
+                return;
+            }
+            Table table = Table.of("ID", "TITLE", "TURNS", "UPDATED").maxWidth(48);
+            for (AiSessionStore.Session s : sessions) {
+                table.row(s.id, s.title == null ? "" : s.title, s.turns.size() / 2,
+                        s.updated == null ? "" : s.updated);
+            }
+            table.styler((c, raw, p) -> c == 0 ? Ansi.cyan(p) : p).print(System.out);
+        }
+    }
+
+    /** {@code mate ai show <id>} — print a saved transcript. */
+    @Command(name = "show", description = "Print the transcript of a saved chat session")
+    public static class ShowSub implements Runnable {
+        @Parameters(index = "0", description = "Session id (see 'mate ai sessions')")
+        String id;
+
+        @Override
+        public void run() {
+            AiSessionStore.Session s = AiSessionStore.load(id);
+            if (s == null) {
+                System.err.println(Ansi.fail("No such session: ") + id);
+                return;
+            }
+            System.out.println(Ansi.heading("Session ") + s.id
+                    + Ansi.muted("   " + (s.title == null ? "" : s.title)));
+            System.out.println(Ansi.muted("created " + s.created + " · updated " + s.updated));
+            System.out.println();
+            for (AiSessionStore.Turn t : s.turns) {
+                boolean user = "user".equals(t.role);
+                System.out.println((user ? Ansi.cyan("你 ❯ ") : Ansi.green("AI ❯ ")) + t.text);
+                System.out.println();
+            }
+        }
+    }
+
+    /** {@code mate ai fork <id> [newId]} — branch a session's transcript locally. */
+    @Command(name = "fork", description = "Fork a saved session's transcript into a new local id")
+    public static class ForkSub implements Runnable {
+        @Parameters(index = "0", description = "Source session id")
+        String id;
+
+        @Parameters(index = "1", arity = "0..1", description = "New session id (optional; auto-generated)")
+        String newId;
+
+        @Override
+        public void run() {
+            String target = (newId == null || newId.isBlank()) ? AiSessionStore.newId() : newId;
+            AiSessionStore.Session forked = AiSessionStore.fork(id, target);
+            if (forked == null) {
+                System.err.println(Ansi.fail("No such session: ") + id);
+                return;
+            }
+            System.out.println(Ansi.ok("Forked ") + id + Ansi.muted(" → ") + Ansi.cyan(target));
+            System.out.println(Ansi.muted("Note: local transcript only — server-side memory is not copied, so the "
+                    + "new id starts fresh. Continue with: mate ai chat --resume " + target + " \"...\""));
         }
     }
 
