@@ -30,6 +30,12 @@
             <artifactId>picocli</artifactId>
             <version>${picocli.version}</version>
         </dependency>
+        <!-- Interactive REPL (`mate shell`): JLine3 + picocli command-tree completion -->
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli-shell-jline3</artifactId>
+            <version>${picocli.version}</version>
+        </dependency>
         <!-- JSON serialization for Nacos/HTTP payloads -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

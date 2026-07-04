@@ -27,6 +27,7 @@ import vip.mate.cli.command.LogsCommand;
 import vip.mate.cli.command.NewCommand;
 import vip.mate.cli.command.RpcCommand;
 import vip.mate.cli.command.ServiceCommand;
+import vip.mate.cli.command.ShellCommand;
 import vip.mate.cli.command.StatusCommand;
 import vip.mate.cli.command.UpCommand;
 import vip.mate.cli.mcp.McpServerMode;
@@ -44,6 +45,7 @@ import vip.mate.cli.mcp.McpServerMode;
  *   mate service list|info|health               Query services registered in Nacos
  *   mate config init|get|push|delete            Manage Nacos config center
  *   mate ai tools|chat|providers                Inspect or call AI features
+ *   mate shell                                  Interactive REPL — all commands in one JVM, Tab-completion + history
  *   mate --mcp                                  Run as MCP stdio server for Claude Code/Desktop
  */
 @Command(
@@ -63,7 +65,8 @@ import vip.mate.cli.mcp.McpServerMode;
                 RpcCommand.class,
                 DbCommand.class,
                 CacheCommand.class,
-                GenCommand.class
+                GenCommand.class,
+                ShellCommand.class
         }
 )
 public class MateCliApplication implements Runnable {
