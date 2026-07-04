@@ -353,6 +353,13 @@ spring:
 # MateCloud feature toggles
 # ============================================================
 mate:
+  # 无感刷新 (mate-auth): access token 由 sa-token.active-timeout 冻结(默认 30min 无请求),
+  # 前端命中 401 时凭 refresh token 静默换新并重放原请求, 用户无感。refresh token 才是
+  # "最长免密登录时长"—— 到期才真正要求重新登录。单次使用、登出即吊销。
+  auth:
+    refresh-token:
+      # refresh token 有效期(秒), 默认 7 天。设成 <= active-timeout 则失去意义。
+      timeout: ${MATE_REFRESH_TOKEN_TIMEOUT:604800}
   feature:
     # SSO / 身份接入(企业微信/钉钉/飞书/LDAP 单点登录 + 通讯录同步)总开关。
     # 开启后 mate-auth/mate-system 才装配 SSO providers/模板/同步/回调与「身份接入」配置页。

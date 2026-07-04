@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vip.mate.auth.application.command.LdapLoginCommand;
 import vip.mate.auth.application.command.PasswordLoginCommand;
+import vip.mate.auth.application.command.RefreshTokenCommand;
 import vip.mate.auth.application.command.SmsLoginCommand;
 import vip.mate.auth.application.command.SmsSendCommand;
 import vip.mate.auth.application.command.SsoLoginCommand;
@@ -122,6 +123,21 @@ public class AuthController {
     public Result<LoginResult> ldapLogin(@Valid @RequestBody LdapLoginCommand command) {
         captchaService.verifyAndConsume(command.getCaptchaVerification());
         return Result.ok(authAppService.ldapLogin(command));
+    }
+
+    /**
+     * Silently renew the session: exchange a valid refresh token for a fresh
+     * access + refresh token pair. Public (no active access token required) — the
+     * client's request interceptor calls this on a 401 and replays the original
+     * request with the new access token, so an active user is never bounced to the
+     * login screen until the refresh token itself expires.
+     *
+     * @param command the opaque refresh token issued at login
+     * @return a new {@link LoginResult} (new access token + rotated refresh token)
+     */
+    @PostMapping("/refresh")
+    public Result<LoginResult> refresh(@Valid @RequestBody RefreshTokenCommand command) {
+        return Result.ok(authAppService.refresh(command.getRefreshToken()));
     }
 
     /**

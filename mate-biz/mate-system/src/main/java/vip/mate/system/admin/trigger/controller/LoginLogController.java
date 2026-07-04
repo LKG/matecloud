@@ -43,11 +43,12 @@ public class LoginLogController {
             @RequestParam(defaultValue = "20") int pageSize,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String loginType,
             @RequestParam(required = false)
                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @RequestParam(required = false)
                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
-        return Result.ok(queryService.page(pageNum, pageSize, username, status, startTime, endTime));
+        return Result.ok(queryService.page(pageNum, pageSize, username, status, loginType, startTime, endTime));
     }
 
     @GetMapping("/{id}")

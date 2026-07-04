@@ -92,6 +92,8 @@ export interface LoginResult {
   tokenName: string
   tokenValue: string
   expiresInSeconds: number
+  /** Long-lived single-use token used to silently renew {@link tokenValue} on 401. */
+  refreshToken?: string
   roleCodes?: string[]
   permissions?: string[]
 }

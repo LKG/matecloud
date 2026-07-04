@@ -44,6 +44,11 @@ export const authApi = {
   register: (payload: RegisterCommand) =>
     client.post<any, Result<LoginResult>>('/auth/register', payload),
 
+  // ---- Silent session renewal (无感刷新) ----
+  /** Exchange a refresh token for a fresh access + refresh token pair. */
+  refresh: (refreshToken: string) =>
+    client.post<any, Result<LoginResult>>('/auth/refresh', { refreshToken }),
+
   // ---- Session lifecycle ----
   logout: () => client.post<any, Result<void>>('/auth/logout'),
 

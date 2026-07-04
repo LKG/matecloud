@@ -33,6 +33,15 @@ public record LoginResult(
         String tokenName,
         String tokenValue,
         long expiresInSeconds,
+        /**
+         * Long-lived, single-use refresh token. The access token ({@link #tokenValue})
+         * is short-lived — frozen by Sa-Token's {@code active-timeout} after 30 min of
+         * inactivity. When a request then hits 401 the client silently exchanges this
+         * refresh token for a fresh access token via {@code POST /api/v1/auth/refresh},
+         * so an active user never has to re-enter credentials until the refresh token
+         * itself expires.
+         */
+        String refreshToken,
         List<String> roleCodes,
         List<String> permissions
 ) {

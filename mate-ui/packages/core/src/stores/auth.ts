@@ -86,11 +86,28 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
 
+  // The API client renews the access token silently on 401 and writes the new
+  // value straight to localStorage; mirror it into the store so token / isLoggedIn
+  // (and the next request header) stay consistent without a page reload.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('mate:token-refreshed', (e) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.token) token.value = detail.token
+      if (detail?.tokenName) tokenName.value = detail.tokenName
+    })
+  }
+
   function applyLoginResult(result: LoginResult) {
     token.value = result.tokenValue
     tokenName.value = result.tokenName
     localStorage.setItem('mate_token', result.tokenValue)
     localStorage.setItem('mate_token_name', result.tokenName)
+    // Persist the refresh token so the API client can silently renew the access
+    // token on 401 (see client.ts). Only overwrite when present — a refresh
+    // response always carries a rotated one; a legacy backend may omit it.
+    if (result.refreshToken) {
+      localStorage.setItem('mate_refresh_token', result.refreshToken)
+    }
     user.value = {
       userId: result.userId,
       username: result.username,
@@ -165,6 +182,7 @@ export const useAuthStore = defineStore('auth', () => {
     menuTree.value = []
     localStorage.removeItem('mate_token')
     localStorage.removeItem('mate_token_name')
+    localStorage.removeItem('mate_refresh_token')
     localStorage.removeItem(AUTH_STATE_KEY)
   }
 

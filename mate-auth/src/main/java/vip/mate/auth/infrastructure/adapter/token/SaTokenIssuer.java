@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import vip.mate.auth.domain.adapter.port.RefreshTokenPort;
 import vip.mate.auth.domain.adapter.port.RolePermissionResolverPort;
 import vip.mate.auth.domain.adapter.port.TokenIssuerPort;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
@@ -49,6 +50,7 @@ public class SaTokenIssuer implements TokenIssuerPort {
 
     private final StringRedisTemplate stringRedisTemplate;
     private final RolePermissionResolverPort rolePermissionResolver;
+    private final RefreshTokenPort refreshTokenPort;
 
     @Override
     public LoginResult issue(AuthUser user) {
@@ -72,6 +74,10 @@ public class SaTokenIssuer implements TokenIssuerPort {
             StpUtil.getSession().set("roles", roles);
         }
 
+        // Pair the short-lived access token with a long-lived refresh token so the
+        // client can silently renew the session (see RefreshTokenPort).
+        String refreshToken = refreshTokenPort.issue(user.getUserId());
+
         return LoginResult.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
@@ -80,6 +86,7 @@ public class SaTokenIssuer implements TokenIssuerPort {
                 .tokenName(StpUtil.getTokenName())
                 .tokenValue(StpUtil.getTokenValue())
                 .expiresInSeconds(StpUtil.getTokenTimeout())
+                .refreshToken(refreshToken)
                 .roleCodes(user.getRoleCodes())
                 .permissions(user.getPermissions())
                 .build();
@@ -91,6 +98,9 @@ public class SaTokenIssuer implements TokenIssuerPort {
         if (loginId != null) {
             stringRedisTemplate.delete(SessionCacheKeys.ROLE_KEY_PREFIX + loginId);
             stringRedisTemplate.delete(SessionCacheKeys.PERM_KEY_PREFIX + loginId);
+            // Kill the user's refresh tokens too, otherwise a logged-out session
+            // could still be resurrected via /auth/refresh.
+            refreshTokenPort.revokeByUser(loginId.toString());
             StpUtil.logout();
             log.info("[auth] Session revoked: loginId={}", loginId);
         }

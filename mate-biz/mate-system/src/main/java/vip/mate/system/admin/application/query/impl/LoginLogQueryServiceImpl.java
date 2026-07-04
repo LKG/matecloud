@@ -35,7 +35,7 @@ public class LoginLogQueryServiceImpl implements ILoginLogQueryService {
 
     @Override
     public PageResult<LoginLogVO> page(int pageNum, int pageSize,
-                                        String username, Integer status,
+                                        String username, Integer status, String loginType,
                                         LocalDateTime startTime, LocalDateTime endTime) {
         LambdaQueryWrapper<LoginLogPO> wrapper = new LambdaQueryWrapper<>();
         if (username != null && !username.isBlank()) {
@@ -43,6 +43,9 @@ public class LoginLogQueryServiceImpl implements ILoginLogQueryService {
         }
         if (status != null) {
             wrapper.eq(LoginLogPO::getStatus, status);
+        }
+        if (loginType != null && !loginType.isBlank()) {
+            wrapper.eq(LoginLogPO::getLoginType, loginType);
         }
         if (startTime != null) {
             wrapper.ge(LoginLogPO::getCreatedAt, startTime);

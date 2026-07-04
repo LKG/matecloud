@@ -47,6 +47,8 @@ export interface LoginLogQuery {
   pageSize?: number
   username?: string
   status?: number
+  /** UPPERCASE enum name: PASSWORD | SMS | SSO | LDAP | REFRESH. */
+  loginType?: string
   startTime?: string
   endTime?: string
 }

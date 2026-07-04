@@ -28,10 +28,16 @@ import vip.mate.auth.application.command.PasswordLoginCommand;
 import vip.mate.auth.application.command.SmsLoginCommand;
 import vip.mate.auth.application.command.SsoLoginCommand;
 import vip.mate.auth.application.login.LoginContext;
+import vip.mate.auth.domain.adapter.port.LoginAuditPort;
+import vip.mate.auth.domain.adapter.port.RefreshTokenPort;
 import vip.mate.auth.domain.adapter.port.SmsCodePort;
 import vip.mate.auth.domain.adapter.port.TokenIssuerPort;
+import vip.mate.auth.domain.event.UserLoggedInEvent;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
 import vip.mate.auth.domain.model.valobj.LoginResult;
+import vip.mate.auth.domain.model.valobj.LoginType;
+
+import java.time.Instant;
 import vip.mate.auth.domain.service.IAuthDomainService;
 import vip.mate.base.exception.BizException;
 import vip.mate.base.response.ResponseCode;
@@ -54,6 +60,8 @@ public class AuthAppService {
 
     private final LoginContext loginContext;
     private final TokenIssuerPort tokenIssuer;
+    private final RefreshTokenPort refreshTokenPort;
+    private final LoginAuditPort loginAuditPort;
     private final IAuthDomainService authDomainService;
     private final SmsCodePort smsCodePort;
     private final StringRedisTemplate stringRedisTemplate;
@@ -87,6 +95,42 @@ public class AuthAppService {
 
     public void sendSmsCode(String mobile) {
         smsCodePort.sendLoginCode(mobile);
+    }
+
+    /**
+     * Exchange a valid refresh token for a brand-new access + refresh token pair
+     * (rotation). Called when the client's access token has expired/frozen and a
+     * request hit 401. The old refresh token is single-use — {@code consume}
+     * atomically invalidates it — so a leaked token cannot be replayed.
+     *
+     * <p>The user is reloaded and re-checked for {@code active} status on every
+     * refresh, so an account disabled mid-session stops renewing immediately, and
+     * roles/permissions are re-resolved fresh (picking up any grants/revocations).
+     *
+     * @throws BizException {@code UNAUTHORIZED} when the refresh token is unknown,
+     *                      already used, or expired — the client then falls back
+     *                      to the login screen.
+     */
+    public LoginResult refresh(String refreshToken) {
+        String userId = refreshTokenPort.consume(refreshToken);
+        if (userId == null) {
+            throw new BizException(ResponseCode.UNAUTHORIZED.getCode(),
+                    "Refresh token is invalid or expired");
+        }
+        AuthUser user = authDomainService.loadById(userId);
+        user.ensureActive();
+        LoginResult result = tokenIssuer.issue(user);
+
+        // Record the renewal in mate_login_log (loginType=REFRESH) so it shows up
+        // in 日志审计 → 登录日志 next to real logins. Reuses the login-audit pipeline;
+        // the listener fills client IP / user-agent from the current request.
+        loginAuditPort.recordSuccess(UserLoggedInEvent.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .loginType(LoginType.REFRESH)
+                .at(Instant.now())
+                .build());
+        return result;
     }
 
     public void logout() {

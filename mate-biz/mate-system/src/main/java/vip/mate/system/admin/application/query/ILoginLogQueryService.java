@@ -23,11 +23,13 @@ public interface ILoginLogQueryService {
 
     /**
      * Paginated query. {@code username} substring filter, {@code status}
-     * exact match (0 = success / 1 = fail), {@code startTime}/{@code endTime}
-     * bound the {@code created_at} window. Any may be {@code null}.
+     * exact match (0 = success / 1 = fail), {@code loginType} exact match
+     * (uppercase enum name — PASSWORD / SMS / SSO / LDAP / REFRESH),
+     * {@code startTime}/{@code endTime} bound the {@code created_at} window.
+     * Any may be {@code null}.
      */
     PageResult<LoginLogVO> page(int pageNum, int pageSize,
-                                 String username, Integer status,
+                                 String username, Integer status, String loginType,
                                  LocalDateTime startTime, LocalDateTime endTime);
 
     LoginLogVO findById(String id);

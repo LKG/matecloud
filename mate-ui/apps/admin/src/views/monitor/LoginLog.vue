@@ -12,6 +12,14 @@
         <el-option :label="t('log.filterSuccess')" :value="0" />
         <el-option :label="t('log.filterFailed')" :value="1" />
       </el-select>
+      <el-select v-model="search.loginType" :placeholder="t('log.loginType')" clearable style="width: 140px">
+        <el-option
+          v-for="opt in loginTypeOptions"
+          :key="opt.value"
+          :label="opt.label"
+          :value="opt.value"
+        />
+      </el-select>
       <el-date-picker
         v-model="search.range"
         type="datetimerange"
@@ -34,6 +42,11 @@
     >
       <template #col-clientIp="{ row }">
         <span class="mc-mono">{{ row.clientIp }}</span>
+      </template>
+      <template #col-loginType="{ row }">
+        <el-tag :type="loginTypeTagType(row.loginType)" size="small" disable-transitions>
+          {{ loginTypeLabel(row.loginType) }}
+        </el-tag>
       </template>
       <template #col-status="{ row }">
         <MateBadge :status="row.status" domain="log">
@@ -74,7 +87,11 @@
                 {{ detail.status === 0 ? t('log.statusOk') : t('log.statusFail') }}
               </MateBadge>
             </div>
-            <div class="kv"><span>{{ t('log.loginType') }}</span><b>{{ detail.loginType }}</b></div>
+            <div class="kv"><span>{{ t('log.loginType') }}</span>
+              <el-tag :type="loginTypeTagType(detail.loginType)" size="small" disable-transitions>
+                {{ loginTypeLabel(detail.loginType) }}
+              </el-tag>
+            </div>
             <div class="kv"><span>{{ t('log.time') }}</span><b>{{ detail.createdAt }}</b></div>
             <div class="kv"><span>{{ t('log.ip') }}</span><b class="mc-mono">{{ detail.clientIp }}</b></div>
             <div v-if="detail.location" class="kv"><span>{{ t('log.location') }}</span><b>{{ detail.location }}</b></div>
@@ -94,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 defineOptions({ name: 'LoginLogView' })
@@ -113,6 +130,25 @@ const columns: MateColumn[] = [
   { prop: 'createdAt', label: t('log.time'), width: 160 },
 ]
 
+// Login-type options / labels. Values are the UPPERCASE enum names the backend
+// stores in mate_login_log.login_type (PASSWORD / SMS / SSO / LDAP / REFRESH).
+const loginTypeOptions = computed(() => [
+  { value: 'PASSWORD', label: t('log.loginTypePassword') },
+  { value: 'SMS', label: t('log.loginTypeSms') },
+  { value: 'SSO', label: t('log.loginTypeSso') },
+  { value: 'LDAP', label: t('log.loginTypeLdap') },
+  { value: 'REFRESH', label: t('log.loginTypeRefresh') },
+])
+function loginTypeLabel(code?: string) {
+  if (!code) return '-'
+  const hit = loginTypeOptions.value.find((x) => x.value === code.toUpperCase())
+  return hit ? hit.label : code
+}
+// 令牌续期(REFRESH)用 warning 橙色醒目区分, 其余登录用中性 info。
+function loginTypeTagType(code?: string): 'warning' | 'info' {
+  return code?.toUpperCase() === 'REFRESH' ? 'warning' : 'info'
+}
+
 const loading = ref(false)
 const logs = ref<LoginLogItem[]>([])
 const pageNum = ref(1)
@@ -122,6 +158,7 @@ const total = ref(0)
 const search = reactive({
   username: '',
   status: undefined as number | undefined,
+  loginType: undefined as string | undefined,
   range: [] as string[],
 })
 
@@ -133,6 +170,7 @@ async function loadData() {
       pageSize: pageSize.value,
       username: search.username || undefined,
       status: search.status,
+      loginType: search.loginType || undefined,
       startTime: search.range?.[0],
       endTime: search.range?.[1],
     })
@@ -156,6 +194,7 @@ function handleSearch() { pageNum.value = 1; loadData() }
 function handleReset() {
   search.username = ''
   search.status = undefined
+  search.loginType = undefined
   search.range = []
   handleSearch()
 }

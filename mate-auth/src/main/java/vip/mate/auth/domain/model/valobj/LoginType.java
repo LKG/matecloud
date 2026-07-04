@@ -38,7 +38,15 @@ public enum LoginType {
     SSO("sso", "第三方扫码登录"),
 
     /** LDAP / AD directory bind. */
-    LDAP("ldap", "LDAP 目录登录");
+    LDAP("ldap", "LDAP 目录登录"),
+
+    /**
+     * Silent token renewal — the client exchanged a refresh token for a fresh
+     * access token (see {@code AuthAppService.refresh}). Not a real "login"
+     * strategy: it never flows through {@code LoginContext}; it exists here so a
+     * renewal can be recorded in {@code mate_login_log} alongside real logins.
+     */
+    REFRESH("refresh", "令牌续期");
 
     private final String code;
     private final String description;
