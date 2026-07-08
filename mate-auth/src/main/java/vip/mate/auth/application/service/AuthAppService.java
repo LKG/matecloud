@@ -36,6 +36,7 @@ import vip.mate.auth.domain.event.UserLoggedInEvent;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
 import vip.mate.auth.domain.model.valobj.LoginResult;
 import vip.mate.auth.domain.model.valobj.LoginType;
+import vip.mate.auth.types.constant.SessionCacheKeys;
 
 import java.time.Instant;
 import vip.mate.auth.domain.service.IAuthDomainService;
@@ -54,9 +55,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AuthAppService {
-
-    private static final String ROLE_KEY_PREFIX = "mate:user:role:";
-    private static final String PERM_KEY_PREFIX = "mate:user:perm:";
 
     private final LoginContext loginContext;
     private final TokenIssuerPort tokenIssuer;
@@ -146,8 +144,8 @@ public class AuthAppService {
         AuthUser user = authDomainService.loadById(userId);
 
         // Enrich with cached permissions/roles from Redis (written by SaTokenIssuer at login)
-        Set<String> perms = stringRedisTemplate.opsForSet().members(PERM_KEY_PREFIX + userId);
-        Set<String> roles = stringRedisTemplate.opsForSet().members(ROLE_KEY_PREFIX + userId);
+        Set<String> perms = stringRedisTemplate.opsForSet().members(SessionCacheKeys.PERM_KEY_PREFIX + userId);
+        Set<String> roles = stringRedisTemplate.opsForSet().members(SessionCacheKeys.ROLE_KEY_PREFIX + userId);
         return AuthUser.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())

@@ -16,7 +16,6 @@
 package vip.mate.auth.domain.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import vip.mate.auth.domain.adapter.port.PasswordEncoderPort;
 import vip.mate.auth.domain.adapter.port.UserQueryPort;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
@@ -26,12 +25,13 @@ import vip.mate.base.exception.BizException;
 import vip.mate.base.response.ResponseCode;
 
 /**
- * Domain-service implementation. Orchestrates the port lookup and delegates
- * every verification step to {@link AuthUser} domain methods.
+ * Framework-free domain service (no Spring annotations) — registered as a bean by
+ * {@code DomainServiceConfiguration} in the infrastructure layer, so the domain
+ * layer keeps zero framework dependencies. Orchestrates the port lookup and
+ * delegates every verification step to {@link AuthUser} domain methods.
  *
  * @author mateaix
  */
-@Service
 @RequiredArgsConstructor
 public class AuthDomainServiceImpl implements IAuthDomainService {
 

@@ -24,6 +24,7 @@ import vip.mate.api.admin.service.IRpcPermissionService;
 import vip.mate.api.rpc.RpcConstants;
 import vip.mate.auth.domain.adapter.port.RolePermissionResolverPort;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
+import vip.mate.auth.types.constant.SessionCacheKeys;
 import vip.mate.base.result.Result;
 
 import java.util.List;

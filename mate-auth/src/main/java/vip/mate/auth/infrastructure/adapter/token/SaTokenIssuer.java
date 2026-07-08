@@ -25,6 +25,7 @@ import vip.mate.auth.domain.adapter.port.RolePermissionResolverPort;
 import vip.mate.auth.domain.adapter.port.TokenIssuerPort;
 import vip.mate.auth.domain.model.aggregate.AuthUser;
 import vip.mate.auth.domain.model.valobj.LoginResult;
+import vip.mate.auth.types.constant.SessionCacheKeys;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
