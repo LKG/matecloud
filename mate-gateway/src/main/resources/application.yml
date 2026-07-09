@@ -73,7 +73,10 @@ mate:
         # 企业微信通讯录变更回调入口 — 企业微信服务器直接调用, 不带 sa-token;
         # 鉴权靠回调自身的 Token/EncodingAESKey 验签(WeComCallbackCrypto)。
         - /api/v1/sso/callback/**
-        - /actuator/**
+        # actuator: 仅健康探针/版本无鉴权放行; prometheus/metrics 等敏感端点纳入 admin-paths(需超管),
+        # 监控经内网直连各服务端口抓取, 不经业务网关无鉴权暴露
+        - /actuator/health
+        - /actuator/info
         - /doc.html
         - /webjars/**
         - /v3/api-docs/**
@@ -85,6 +88,8 @@ mate:
         - /api/v1/menus/**
         # 网关治理控制台(灰度/限流/超时)—— 本地接口, 仅超管可访问
         - /api/v1/gateway/**
+        # actuator 敏感端点(prometheus/metrics 等)—— 经网关需超管, 防公网无鉴权抓取内部指标
+        - /actuator/**
 
 logging:
   level:

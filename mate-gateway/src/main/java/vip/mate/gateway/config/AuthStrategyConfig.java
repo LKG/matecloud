@@ -38,7 +38,9 @@ public class AuthStrategyConfig {
             "/api/v1/auth/refresh",
             "/api/v1/auth/captcha",
             "/api/v1/auth/sms/**",
-            "/actuator/**",
+            // actuator: 仅健康探针/版本信息无鉴权放行; prometheus/metrics 等敏感端点纳入 adminPaths
+            "/actuator/health",
+            "/actuator/info",
             "/doc.html",
             "/webjars/**",
             "/swagger-resources/**",
@@ -52,6 +54,9 @@ public class AuthStrategyConfig {
     private List<String> adminPaths = new ArrayList<>(List.of(
             "/api/v1/users/delete/**",
             "/api/v1/roles/**",
-            "/api/v1/menus/**"
+            "/api/v1/menus/**",
+            // actuator 敏感端点(prometheus/metrics/env/beans...): 经网关需超管;
+            // 监控应走内网直连各服务端口抓取, 不经业务网关无鉴权暴露
+            "/actuator/**"
     ));
 }

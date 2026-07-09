@@ -48,7 +48,10 @@ public class MonolithSecurityConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> StpUtil.checkLogin()))
-                .addPathPatterns("/api/**")
+                // 纳入 /actuator/** 拦截 —— SaInterceptor 只覆盖 addPathPatterns, 不加则 actuator
+                // 敏感端点(prometheus/metrics)在单体端口(9010)无鉴权暴露。health/info 探针放行,
+                // 其余需登录 (与网关侧收窄一致; prometheus 抓取需另配 basic-auth 或独立管理端口)。
+                .addPathPatterns("/api/**", "/actuator/**")
                 .excludePathPatterns(
                         "/api/v1/auth/login",
                         "/api/v1/auth/register",
@@ -58,7 +61,8 @@ public class MonolithSecurityConfig implements WebMvcConfigurer {
                         "/api/v1/auth/sso/**",
                         "/api/v1/auth/ldap/login",
                         "/api/v1/sso/callback/**",
-                        "/actuator/**"
+                        "/actuator/health",
+                        "/actuator/info"
                 );
     }
 }
