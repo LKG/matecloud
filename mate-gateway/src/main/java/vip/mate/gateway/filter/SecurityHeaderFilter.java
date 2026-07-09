@@ -42,6 +42,8 @@ public class SecurityHeaderFilter implements GlobalFilter, Ordered {
                     // 认证上下文头一律剥离 (防伪造) — 与 HeaderRelayFilter 出口注入共用同一份清单,
                     // 新增头进 AuthHeaders.ALL 即自动纳入剥离
                     AuthHeaders.ALL.forEach(h::remove);
+                    // 网关内部签名头同样剥离: 外部不得自带 X-Gateway-Sign/Ts, 否则可尝试重放伪造
+                    AuthHeaders.INTERNAL.forEach(h::remove);
                     h.remove("X-Real-IP");
                     if (realIp != null && !realIp.isBlank()) {
                         h.set("X-Real-IP", realIp);

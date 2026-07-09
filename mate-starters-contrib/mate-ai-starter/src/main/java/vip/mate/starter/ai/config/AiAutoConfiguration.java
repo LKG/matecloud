@@ -21,6 +21,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -61,9 +62,20 @@ import vip.mate.starter.ai.tool.AiToolRegistry;
 @ConditionalOnProperty(prefix = "mate.ai", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AiAutoConfiguration implements WebMvcConfigurer {
 
+    @Value("${mate.gateway.internal.secret:}")
+    private String gatewaySecret;
+    @Value("${mate.gateway.internal.signature-required:true}")
+    private boolean signatureRequired;
+    @Value("${mate.gateway.internal.timestamp-skew-ms:300000}")
+    private long timestampSkewMs;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AiAuthInterceptor())
+        if (signatureRequired && (gatewaySecret == null || gatewaySecret.isBlank())) {
+            log.error("[ai][security] 网关签名校验已开启但 mate.gateway.internal.secret 未配置, "
+                    + "所有 /api/v1/ai/** 请求都将被拒绝; 请配置 MATE_GATEWAY_INTERNAL_SECRET 与网关一致");
+        }
+        registry.addInterceptor(new AiAuthInterceptor(gatewaySecret, timestampSkewMs, signatureRequired))
                 .addPathPatterns("/api/v1/ai/**");
     }
 

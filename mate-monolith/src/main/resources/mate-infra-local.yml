@@ -95,6 +95,12 @@ mate:
   # so they apply in order under flyway_history_monolith.
   module:
     code: monolith
+  # 单体模式无独立网关注入签名, 且单 JVM 无「绕过网关直连下游端口」攻击面
+  # (MonolithSecurityConfig 已对 /api/** 统一 checkLogin), 故关闭下游验签 —— notice
+  # 拦截器回退为仅判 X-User-Id 存在 (与引入网关签名前的行为完全一致)。
+  gateway:
+    internal:
+      signature-required: false
 
 # ---- Sa-Token dedicated Redis (separate logical DB from the cache) ----
 sa-token:

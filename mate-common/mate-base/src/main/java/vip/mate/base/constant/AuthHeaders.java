@@ -55,9 +55,25 @@ public final class AuthHeaders {
      */
     public static final String TRACE_ID = "X-Trace-Id";
 
-    /** 全部认证上下文头 —— 入口剥离与出口注入共用的同一份清单。 */
+    /**
+     * 网关对本次注入的整套身份头 + 时间戳做的 HMAC 签名 (见 {@code GatewaySignature})。
+     * 下游据此证明请求「确实来自网关」, 防止绕过网关直连服务端口伪造 {@link #USER_ID}。
+     * <b>不</b>进 {@link #ALL} (否则 canonicalize 会自引用), 但同样属「网关注入、入口须剥离」,
+     * 故在 {@code SecurityHeaderFilter} 里与 {@link #ALL} 一并剥掉。
+     */
+    public static final String GATEWAY_SIGN = "X-Gateway-Sign";
+    /** 签名时间戳 (epoch millis), 配合 {@link #GATEWAY_SIGN} 做重放窗口校验。 */
+    public static final String GATEWAY_TS = "X-Gateway-Ts";
+
+    /**
+     * 全部认证上下文头 —— 入口剥离与出口注入共用的同一份清单, 也是签名 canonical 的字段顺序。
+     * 顺序一经确定不可随意调整 (网关与下游按同序拼接签名 payload)。
+     */
     public static final List<String> ALL = List.of(
             USER_ID, USER_NAME, TENANT_ID, DEPT_ID, WORKSPACE_ID, ROLES, DATA_SCOPE);
+
+    /** 网关内部头 (签名 + 时间戳): 非透传上下文, 入口须剥离防伪造, 不参与 canonicalize。 */
+    public static final List<String> INTERNAL = List.of(GATEWAY_SIGN, GATEWAY_TS);
 
     private AuthHeaders() {
     }

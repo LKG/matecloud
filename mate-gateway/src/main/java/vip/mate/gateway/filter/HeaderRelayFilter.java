@@ -17,6 +17,7 @@ package vip.mate.gateway.filter;
 
 import cn.dev33.satoken.stp.StpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -27,6 +28,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import vip.mate.base.constant.AuthHeaders;
+import vip.mate.base.security.GatewaySignature;
 
 import java.util.stream.StreamSupport;
 
@@ -66,6 +68,26 @@ public class HeaderRelayFilter implements GlobalFilter, Ordered {
     private static final String TOKEN_PREFIX = "Bearer ";
     /** Matches sa-token.token-name in mate-defaults.yml. */
     private static final String TOKEN_HEADER = HttpHeaders.AUTHORIZATION;
+
+    /** dev 默认值 —— 生产必须覆盖, 否则签名密钥公开等于没签。 */
+    private static final String DEV_DEFAULT_SECRET =
+            "dev-only-gateway-internal-secret-change-in-prod-min-32";
+
+    /** 网关↔下游共享签名密钥。空则拒绝启动 (fail-fast)。 */
+    private final String internalSecret;
+
+    public HeaderRelayFilter(@Value("${mate.gateway.internal.secret:}") String internalSecret) {
+        if (internalSecret == null || internalSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "mate.gateway.internal.secret 未配置 —— 网关无法为下游请求签名, 拒绝启动 "
+                    + "(通过环境变量 MATE_GATEWAY_INTERNAL_SECRET 设置强随机值)");
+        }
+        if (DEV_DEFAULT_SECRET.equals(internalSecret)) {
+            log.warn("[Gateway][security] mate.gateway.internal.secret 仍为 dev 默认值, "
+                    + "生产环境必须通过 MATE_GATEWAY_INTERNAL_SECRET 覆盖为强随机值 (>=32 字节)");
+        }
+        this.internalSecret = internalSecret;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -119,7 +141,20 @@ public class HeaderRelayFilter implements GlobalFilter, Ordered {
                 log.trace("[Gateway] Token resolution failed: {}", e.getMessage());
             }
         }
-        return requestBuilder.build();
+        ServerHttpRequest relayed = requestBuilder.build();
+        // 对整套身份头 + 时间戳做 HMAC 签名, 供下游验证「请求确实来自网关」(防绕过网关直连
+        // 服务端口伪造 X-User-Id)。仅在已注入身份 (X-User-Id) 时签名; 公开/未登录路径不签,
+        // 由下游各自策略处理。
+        if (relayed.getHeaders().getFirst(AuthHeaders.USER_ID) != null) {
+            long ts = System.currentTimeMillis();
+            String sign = GatewaySignature.sign(internalSecret,
+                    name -> relayed.getHeaders().getFirst(name), ts);
+            return relayed.mutate()
+                    .header(AuthHeaders.GATEWAY_TS, Long.toString(ts))
+                    .header(AuthHeaders.GATEWAY_SIGN, sign)
+                    .build();
+        }
+        return relayed;
     }
 
     /** roles 为集合时拼逗号串; null/空 不注入。 */

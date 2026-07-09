@@ -360,6 +360,17 @@ mate:
     refresh-token:
       # refresh token 有效期(秒), 默认 7 天。设成 <= active-timeout 则失去意义。
       timeout: ${MATE_REFRESH_TOKEN_TIMEOUT:604800}
+  # 网关↔下游 HMAC 请求签名 (RFC 064): 网关对注入的身份头(X-User-Id 等)+时间戳签名,
+  # 下游(mate-notice/mate-ai)验签, 防止绕过网关直连服务端口伪造 X-User-Id 冒充身份。
+  gateway:
+    internal:
+      # 共享签名密钥。生产必须用 MATE_GATEWAY_INTERNAL_SECRET 覆盖为强随机值(>=32 字节):
+      #   openssl rand -base64 48    网关侧空则拒绝启动, 仍为 dev 默认值则 WARN。
+      secret: ${MATE_GATEWAY_INTERNAL_SECRET:dev-only-gateway-internal-secret-change-in-prod-min-32}
+      # 下游是否强制验签。默认 true; 本地直连下游调试可设 false (回退为仅判 X-User-Id 存在)。
+      signature-required: ${MATE_GATEWAY_SIGN_REQUIRED:true}
+      # 签名时间戳重放窗口(毫秒), 默认 5 分钟。
+      timestamp-skew-ms: 300000
   feature:
     # SSO / 身份接入(企业微信/钉钉/飞书/LDAP 单点登录 + 通讯录同步)总开关。
     # 开启后 mate-auth/mate-system 才装配 SSO providers/模板/同步/回调与「身份接入」配置页。
