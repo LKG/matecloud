@@ -814,7 +814,7 @@ public void export(@RequestParam(required = false) String keyword,
     response.setHeader("Content-Disposition",
         "attachment;filename=" + URLEncoder.encode("用户列表.xlsx", StandardCharsets.UTF_8));
     List<UserExportRow> rows = queryService.exportRows(keyword);
-    EasyExcel.write(response.getOutputStream(), UserExportRow.class)
+    FesodSheet.write(response.getOutputStream(), UserExportRow.class)
              .sheet("用户").doWrite(rows);
 }
 ```
@@ -1631,10 +1631,10 @@ main                    # 主分支
 | RPC | Dubbo | 3.3.6 |
 | 注册中心 | Nacos | — |
 | ORM | MyBatis Plus | 3.5.16 |
-| 认证 | Sa-Token | 1.45.0 |
+| 认证 | Sa-Token | 1.46.0 |
 | 缓存 | Redisson | 4.5.0 |
 | 序列化 | FastJSON2 | 2.0.53 |
-| Excel | EasyExcel | 4.0.3 |
+| Excel | Apache Fesod (incubating) | 2.1.0-incubating |
 | 对象映射 | MapStruct | — |
 | 工具库 | Lombok, HuTool, Guava | — |
 | 前端框架 | Vue 3 | 3.5.32 |

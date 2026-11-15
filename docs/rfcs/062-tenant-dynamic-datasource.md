@@ -218,7 +218,7 @@ public class TenantDataSourceProperties {
 public class TenantDataSourceRegistry {
 
     private final DataSource routingDataSource;            // = DynamicRoutingDataSource
-    private final DataSourceCreator dsCreator;             // baomidou (Druid creator, 见 §11 GAP-3)
+    private final DataSourceCreator dsCreator;             // baomidou (Hikari creator, 见 §11 GAP-1 修订)
     private final TenantDataSourceMetaResolver metaResolver;
     private final TenantDataSourceProperties props;
     private final TenantSchemaMigrator migrator;           // per-tenant Flyway, 见 §11 GAP-5
@@ -333,7 +333,7 @@ public static void push(String dsName) {
 @ConditionalOnProperty(prefix = "mate.tenant.datasource", name = "enabled", havingValue = "true")
 public TenantDataSourceRegistry tenantDataSourceRegistry(
         DataSource dataSource,
-        DataSourceCreator dataSourceCreator,          // 注入 Druid creator (§11 GAP-3)
+        DataSourceCreator dataSourceCreator,          // 注入 Hikari creator (§11 GAP-1 修订)
         TenantDataSourceMetaResolver metaResolver,
         TenantDataSourceProperties props,
         TenantSchemaMigrator migrator) {              // per-tenant Flyway (§11 GAP-5)
@@ -344,8 +344,9 @@ public TenantDataSourceRegistry tenantDataSourceRegistry(
 }
 ```
 
-`DataSourceCreator` 由 baomidou starter 提供——但必须确保选到 **Druid** 实现（matecloud
-全局用 Druid，见 §11 GAP-3），而非 joolun 用的 Hikari。
+`DataSourceCreator` 由 baomidou starter 提供——选 **HikariCP** 实现即可（matecloud 全局池
+已于 2026-11 切换为 Spring Boot 4 原生装配的 HikariCP，Druid 依赖已移除，见 §11 GAP-1 修订），
+与 joolun 源码一致。
 
 ---
 
@@ -477,14 +478,18 @@ public TenantDataSourceRegistry tenantDataSourceRegistry(
 
 ### 11.3 本 RFC 自身的遗漏（需补的技术点）
 
-- **GAP-1 池实现类型（Druid vs Hikari）**：matecloud 全局排除 Druid 自动配置但仍用 Druid 池；
-  joolun 的 `DefaultDataSourceCreator` 只塞了 `HikariDataSourceCreator`。
-  本 RFC 落地时**必须确认 per-tenant 池用 Druid `DataSourceCreator`**（保持与主库一致的监控/慢 SQL），
-  并把 `perPoolMaxActive/minIdle` 映射到 Druid 的 `maxActive/minIdle`（非 Hikari 的 `maximumPoolSize`）。
-  依赖：`dynamic-datasource-spring-boot4-starter:4.5.0` + druid creator 在 classpath。
+- **GAP-1 池实现类型（Druid vs Hikari）【2026-11-15 修订：定为 HikariCP】**：matecloud 原全局用
+  Druid 池，已随 Spring Boot 4.0 升级改为 Boot 自身 `DataSourceAutoConfiguration` 装配的
+  HikariCP（`spring-boot-starter-jdbc` 默认携带），Druid 依赖已从脚手架移除；
+  joolun 的 `DefaultDataSourceCreator` 本来也只塞 `HikariDataSourceCreator`。
+  因此 **per-tenant 池统一用 HikariCP `DataSourceCreator`**（与主库实现天然一致，指标经
+  Actuator `hikaricp.connections.*` 暴露），把 `perPoolMaxActive/minIdle` 映射到 Hikari 的
+  `maximumPoolSize/minimumIdle`（另建议配 `maxLifetime` < MySQL `wait_timeout`）。
+  依赖：`dynamic-datasource-spring-boot4-starter` + HikariCP（`spring-boot-starter-jdbc` 默认在 classpath）。
 - **GAP-2 已并入 GAP-A**（探活泄漏）。
 - **GAP-3 master 数据源的完整配置缺失**：前文 §4.1 只给了租户 template，没给 `master`。
-  `dynamic.enabled=true` 时 mate-ds-starter 的单 Druid bean 退避、`DynamicRoutingDataSource` 接管，
+  `dynamic.enabled=true` 时 Boot 自动装配的单 HikariCP 数据源退避
+  （`@ConditionalOnMissingBean(DataSource)`）、`DynamicRoutingDataSource` 接管，
   此时 **`master` 必须由 `spring.datasource.dynamic.datasource.master.*` 显式配置**，且
   `spring.datasource.dynamic.primary=master` 必须等于 `mate.tenant.default-ds-name`。补全配置样例：
 
@@ -517,7 +522,7 @@ public TenantDataSourceRegistry tenantDataSourceRegistry(
 - **GAP-5 驱逐 vs 在途连接的竞态（前文说轻了）**：`removeDataSource` 关池时若有请求正在该池上查询，
   连接会被掐断。前文只说"确认无活跃借出连接否则跳过"，但 baomidou `removeDataSource` 不保证等待在途。
   **强化策略**：① LRU 选victim 时跳过"最近 `idleEvictMinutes` 或最近 N 秒内访问过"的池；
-  ② 关池走 Druid 的优雅关闭（等待活跃连接归还，设超时）；③ 被驱逐租户下次访问自动懒重建——
+  ② 关池走 Hikari 的优雅关闭（`close()` 等待在途连接归还后再拆池）；③ 被驱逐租户下次访问自动懒重建——
   正确性不受影响，仅一次冷启动延迟。空闲驱逐天然避开热租户，竞态窗口极小但必须显式处理。
 - **GAP-6 `strict=true` 兜底（前文仅在安全表一笔带过，提升为硬性默认）**：baomidou 默认 `strict=false`
   会把未知 ds 名静默路由到 primary。本 RFC 的 `ensureRegistered` fail-closed 是第一道；
@@ -550,8 +555,9 @@ joolun `setTenantId` 内 `push` 但**不 poll**，靠 `ClearTtlDataSourceFilter`
 - `TenantProperties` 增 `defenseInDepth`（GAP-7）；`MateTenantLineHandler.ignoreTable` 据此在
   DATASOURCE 模式可选不 ignore。
 - Nacos `mate-tenant-datasource` 模板补 `master` 与 `dynamic.strict=true`（GAP-3/6）。
-- Registry 注入 `DataSourceCreator`（Druid）而非 `DefaultDataSourceCreator` 泛指（GAP-1）。
-- 驱逐策略加"近期访问保护窗 + Druid 优雅关池"（GAP-5）。
+- Registry 注入 `DataSourceCreator`（HikariCP 实现）——classpath 已无 Druid，`DefaultDataSourceCreator`
+  会自然选中 Hikari creator（GAP-1 修订）。
+- 驱逐策略加"近期访问保护窗 + Hikari 优雅关池"（GAP-5）。
 
 ---
 

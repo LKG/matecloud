@@ -14,7 +14,7 @@
     <artifactId>mate-excel-starter</artifactId>
     <packaging>jar</packaging>
     <name>mate-excel-starter</name>
-    <description>Excel import/export starter - @ExcelExport / @ExcelImport (EasyExcel)</description>
+    <description>Excel import/export starter - @ExcelExport / @ExcelImport (Apache Fesod)</description>
 
     <dependencies>
         <dependency>
@@ -22,8 +22,8 @@
             <artifactId>mate-base</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
+            <groupId>org.apache.fesod</groupId>
+            <artifactId>fesod-sheet</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

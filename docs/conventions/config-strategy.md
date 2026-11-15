@@ -46,7 +46,7 @@
 |------------------|--------------------------------|-------------------------------------|
 | **Nacos itself** | `spring.cloud.nacos.{discovery,config}` with env-var placeholders | Full auth overrides when needed |
 | **MyBatis Plus** | `mybatis-plus.global-config.*`, `mybatis-plus.configuration.*`, `mapper-locations`, `type-aliases-package` | (empty — ORM config is framework-constant) |
-| **Druid DataSource** | (empty) | `spring.datasource.url/username/password`, `druid.initial-size/max-active/filters/stat-view-servlet/web-stat-filter/connection-properties` |
+| **HikariCP DataSource** | (empty) | `spring.datasource.url/username/password`, `spring.datasource.type=com.zaxxer.hikari.HikariDataSource`, `spring.datasource.hikari.{minimum-idle,maximum-pool-size,connection-timeout,idle-timeout,max-lifetime}` |
 | **Redis / Redisson** | (empty — connection is env-specific) | `spring.data.redis.host/port/password/database/lettuce.pool.*` |
 | **RabbitMQ** | (empty) | `spring.rabbitmq.host/port/username/password/virtual-host/publisher-confirm-type/publisher-returns/listener.simple.*` |
 | **MinIO** | `minio.bucket-name=matecloud` | `minio.endpoint/access-key/secret-key` |

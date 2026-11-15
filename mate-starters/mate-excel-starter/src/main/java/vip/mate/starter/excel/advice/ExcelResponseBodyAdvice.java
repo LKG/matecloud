@@ -15,9 +15,9 @@
  */
 package vip.mate.starter.excel.advice;
 
-import com.alibaba.excel.EasyExcel;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fesod.sheet.FesodSheet;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -74,7 +74,7 @@ public class ExcelResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         servletResponse.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
 
         try {
-            EasyExcel.write(servletResponse.getOutputStream(), annotation.dataClass())
+            FesodSheet.write(servletResponse.getOutputStream(), annotation.dataClass())
                     .sheet(annotation.sheetName())
                     .doWrite(dataList);
         } catch (IOException e) {

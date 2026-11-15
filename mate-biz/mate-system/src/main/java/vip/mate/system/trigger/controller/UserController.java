@@ -116,7 +116,7 @@ public class UserController {
      * example row.
      *
      * <p>Implemented as a one-row {@code @ExcelExport} returning an empty list
-     * so EasyExcel writes just the header row from the {@link UserImportRow}
+     * so Fesod writes just the header row from the {@link UserImportRow}
      * {@code @ExcelProperty} annotations — no need for a separate template
      * renderer.
      */

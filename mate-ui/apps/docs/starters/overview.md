@@ -15,7 +15,7 @@ MateCloud 提供 **21 个 Starter**（13 标准 + 8 高级），覆盖微服务�
 
 | Starter | 提供的能力 |
 |---------|-----------|
-| [mate-ds-starter](/starters/ds) | MyBatis Plus + Druid 连接池 + Flyway 数据库迁移 |
+| [mate-ds-starter](/starters/ds) | MyBatis Plus + HikariCP 连接池 + Flyway 数据库迁移 |
 | [mate-web-starter](/starters/web) | REST 支持 + 全局异常处理 + Jackson 配置 + DevTools |
 | [mate-cache-starter](/starters/cache) | Caffeine L1 + Redis L2 二级缓存 + `@DistributedLock` + 雪花 ID |
 | mate-nacos-starter | Nacos 服务注册发现 + 配置中心 |
@@ -33,7 +33,7 @@ MateCloud 提供 **21 个 Starter**（13 标准 + 8 高级），覆盖微服务�
 | mate-job-starter | XXL-Job 执行器自动注册 |
 | [mate-security-starter](/starters/security) | `@ApiSign` `@RateLimit` `@AuditLog` `@DataPermission` `@Idempotent` |
 | [mate-file-starter](/starters/file) | MinIO 上传/下载/预签名 URL |
-| mate-excel-starter | `@ExcelExport` / `@ExcelImport`（基于 EasyExcel） |
+| mate-excel-starter | `@ExcelExport` / `@ExcelImport`（基于 Apache Fesod） |
 | [mate-tenant-starter](/starters/tenant) | 多租户隔离（行级/Schema/独立数据源） |
 
 ## 高级 Starter（8 个，mate-starters-contrib）

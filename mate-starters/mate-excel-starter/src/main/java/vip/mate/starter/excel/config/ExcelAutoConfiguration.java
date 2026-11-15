@@ -28,7 +28,7 @@ import vip.mate.starter.excel.resolver.ExcelImportResolver;
 import java.util.List;
 
 @AutoConfiguration
-@ConditionalOnClass(name = "com.alibaba.excel.EasyExcel")
+@ConditionalOnClass(name = "org.apache.fesod.sheet.FesodSheet")
 public class ExcelAutoConfiguration implements WebMvcConfigurer {
 
     @Bean

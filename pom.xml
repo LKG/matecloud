@@ -78,11 +78,10 @@
 
         <!-- Database -->
         <mysql.version>8.3.0</mysql.version>
-        <druid.version>1.2.24</druid.version>
         <p6spy.version>3.9.1</p6spy.version>
 
         <!-- Security -->
-        <sa-token.version>1.45.0</sa-token.version>
+        <sa-token.version>1.46.0</sa-token.version>
 
         <!-- Cache & Redis -->
         <redisson.version>4.5.0</redisson.version>
@@ -99,10 +98,10 @@
         <zxing.version>3.5.3</zxing.version>
         <lark-oapi.version>2.7.1</lark-oapi.version>
         <guava.version>33.6.0-jre</guava.version>
-        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-lang3.version>3.20.0</commons-lang3.version>
         <commons-io.version>2.18.0</commons-io.version>
         <commons-collections4.version>4.5.0-M3</commons-collections4.version>
-        <easyexcel.version>4.0.3</easyexcel.version>
+        <fesod.version>2.1.0-incubating</fesod.version>
         <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
 
         <!-- OSS -->
@@ -379,11 +378,6 @@
                 <version>${mysql.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid</artifactId>
-                <version>${druid.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>p6spy</groupId>
                 <artifactId>p6spy</artifactId>
                 <version>${p6spy.version}</version>
@@ -451,10 +445,11 @@
                 <artifactId>commons-collections4</artifactId>
                 <version>${commons-collections4.version}</version>
             </dependency>
+            <!-- Apache Fesod (incubating) — EasyExcel/FastExcel 官方继任者 (2025-09 入孵化) -->
             <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>easyexcel</artifactId>
-                <version>${easyexcel.version}</version>
+                <groupId>org.apache.fesod</groupId>
+                <artifactId>fesod-sheet</artifactId>
+                <version>${fesod.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>

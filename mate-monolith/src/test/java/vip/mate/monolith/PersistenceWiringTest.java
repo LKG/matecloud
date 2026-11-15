@@ -43,7 +43,9 @@ class PersistenceWiringTest {
                     }
                 })
                 .withConfiguration(AutoConfigurations.of(
-                        DataSourceAutoConfiguration.class, MybatisPlusAutoConfiguration.class,
+                        DataSourceAutoConfiguration.class,
+                        org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration.class,
+                        MybatisPlusAutoConfiguration.class,
                         MybatisPlusInnerInterceptorAutoConfiguration.class,
                         TenantPropertiesAutoConfiguration.class, TenantAutoConfiguration.class,
                         DataScopeAutoConfiguration.class))
@@ -51,7 +53,7 @@ class PersistenceWiringTest {
                         "spring.datasource.url=jdbc:h2:mem:monolith_orm;MODE=MySQL",
                         "spring.datasource.driver-class-name=org.h2.Driver",
                         "spring.datasource.username=sa", "spring.datasource.password=",
-                        "spring.datasource.druid.initial-size=0", "mate.tenant.enabled=true",
+                        "spring.datasource.hikari.minimum-idle=0", "mate.tenant.enabled=true",
                         "mate.tenant.include-tables[0]=mate_user")
                 .run(context -> {
                     assertThat(context).hasNotFailed().hasSingleBean(SqlSessionFactory.class);

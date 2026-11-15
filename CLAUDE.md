@@ -140,9 +140,9 @@ Templates live in `docs/nacos-templates/`. Bootstrap with `mate-cli config init`
 
 ### Starter capabilities (what each starter provides)
 
-Core 7 (always include): `mate-ds-starter` (MyBatis Plus + Druid + Flyway), `mate-web-starter` (REST + Jackson + DevTools), `mate-cache-starter` (Caffeine L1 + Redis L2 + @DistributedLock + SnowflakeID), `mate-nacos-starter`, `mate-rpc-starter` (Dubbo), `mate-sa-token-starter`, `mate-monitor-starter` (Actuator + Prometheus + Tracing)
+Core 7 (always include): `mate-ds-starter` (MyBatis Plus + HikariCP + Flyway), `mate-web-starter` (REST + Jackson + DevTools), `mate-cache-starter` (Caffeine L1 + Redis L2 + @DistributedLock + SnowflakeID), `mate-nacos-starter`, `mate-rpc-starter` (Dubbo), `mate-sa-token-starter`, `mate-monitor-starter` (Actuator + Prometheus + Tracing)
 
-Business 6 (add as needed): `mate-mq-starter` (RabbitMQ + domain events), `mate-job-starter` (XXL-Job), `mate-security-starter` (@ApiSign @RateLimit @AuditLog @DataPermission @Idempotent), `mate-file-starter` (MinIO), `mate-excel-starter` (EasyExcel), `mate-tenant-starter`
+Business 6 (add as needed): `mate-mq-starter` (RabbitMQ + domain events), `mate-job-starter` (XXL-Job), `mate-security-starter` (@ApiSign @RateLimit @AuditLog @DataPermission @Idempotent), `mate-file-starter` (MinIO), `mate-excel-starter` (Apache Fesod), `mate-tenant-starter`
 
 ## Conventions
 

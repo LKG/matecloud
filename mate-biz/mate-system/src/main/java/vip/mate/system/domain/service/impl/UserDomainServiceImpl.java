@@ -25,7 +25,7 @@ import vip.mate.system.types.exception.UserException;
 
 /**
  * Framework-free domain service (no Spring annotations) — registered as a bean by
- * {@code DomainServiceConfiguration} in the infrastructure layer. Password hashing
+ * {@code SystemDomainServiceConfiguration} in the infrastructure layer. Password hashing
  * goes through {@link PasswordEncoderPort} so the domain stays crypto-agnostic.
  *
  * @author mateaix

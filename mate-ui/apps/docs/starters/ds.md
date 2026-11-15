@@ -1,11 +1,11 @@
 # mate-ds-starter
 
-数据源 Starter，封装 MyBatis Plus + Druid 连接池 + Flyway 数据库迁移。
+数据源 Starter，基于 MyBatis Plus + HikariCP 连接池（Spring Boot 4 默认推荐） + Flyway 数据库迁移。
 
 ## 提供的能力
 
 - **MyBatis Plus** 自动配置（分页插件、乐观锁插件、审计字段自动填充）
-- **Druid** 连接池（监控页面可选开启）
+- **HikariCP** 连接池（由 Spring Boot 4 的 `DataSourceAutoConfiguration` 自动装配，池参数走 `spring.datasource.hikari.*`，指标经 Actuator `hikaricp.connections.*` 暴露）
 - **Flyway** 数据库版本迁移（启动时自动执行）
 - **MyMetaObjectHandler** 自动填充 `createTime`、`updateTime`、`createBy`、`updateBy`
 
@@ -20,6 +20,10 @@ spring:
     username: root
     password: ${MYSQL_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
 ```
 
 ## Flyway 迁移

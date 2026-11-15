@@ -7,7 +7,7 @@ matecloud/
 │   └── mate-api/                 # RPC 接口、命令、响应、枚举
 │
 ├── mate-starters/                # 13 个即插即用 Starter（7 核心 + 6 业务）
-│   ├── mate-ds-starter/          # MyBatis Plus + Druid + Flyway
+│   ├── mate-ds-starter/          # MyBatis Plus + HikariCP + Flyway
 │   ├── mate-web-starter/         # 全局异常处理 + Jackson + DevTools
 │   ├── mate-cache-starter/       # Caffeine L1 + Redis L2 + @DistributedLock + 雪花 ID
 │   ├── mate-nacos-starter/       # Nacos 注册发现 + 配置中心
@@ -18,7 +18,7 @@ matecloud/
 │   ├── mate-job-starter/         # XXL-Job 执行器
 │   ├── mate-security-starter/    # @ApiSign @RateLimit @AuditLog @DataPermission @Idempotent
 │   ├── mate-file-starter/        # MinIO 上传/下载/预签名 URL
-│   ├── mate-excel-starter/       # @ExcelExport / @ExcelImport (EasyExcel)
+│   ├── mate-excel-starter/       # @ExcelExport / @ExcelImport (Apache Fesod)
 │   └── mate-tenant-starter/      # 多租户（行级/Schema/独立数据源）
 │
 ├── mate-starters-contrib/        # 8 个高级 Starter（按需引入）

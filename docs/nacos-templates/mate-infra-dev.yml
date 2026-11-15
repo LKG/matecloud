@@ -13,26 +13,22 @@
 # Nacos does not support multi-document YAML.
 # ============================================================
 
-# ---- MySQL / Druid ----
+# ---- MySQL / HikariCP (Spring Boot 4's recommended pool) ----
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:matecloud123}
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      initial-size: 5
-      min-idle: 5
-      max-active: 20
-      max-wait: 60000
-      time-between-eviction-runs-millis: 60000
-      min-evictable-idle-time-millis: 300000
-      validation-query: SELECT 1
-      test-while-idle: true
-      test-on-borrow: false
-      test-on-return: false
-      filters: stat,wall,slf4j
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      pool-name: MateHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 60000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
 
   # ---- Redis / Lettuce ----
   data:
@@ -140,5 +136,5 @@ logging:
     root: INFO
     vip.mate: DEBUG
     com.baomidou.mybatisplus: INFO
-    com.alibaba.druid: WARN
+    com.zaxxer.hikari: WARN
     org.springframework.web: INFO

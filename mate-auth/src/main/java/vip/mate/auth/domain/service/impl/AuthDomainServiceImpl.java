@@ -26,7 +26,7 @@ import vip.mate.base.response.ResponseCode;
 
 /**
  * Framework-free domain service (no Spring annotations) — registered as a bean by
- * {@code DomainServiceConfiguration} in the infrastructure layer, so the domain
+ * {@code AuthDomainServiceConfiguration} in the infrastructure layer, so the domain
  * layer keeps zero framework dependencies. Orchestrates the port lookup and
  * delegates every verification step to {@link AuthUser} domain methods.
  *

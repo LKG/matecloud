@@ -17,7 +17,7 @@ MateCloud 采用 **5 层配置** 策略，服务的 `application.yml` 只需约 
 | 层 | 内容 | 维护者 | 是否随环境变化 | 是否含密钥 |
 |----|------|--------|---------------|-----------|
 | `mate-defaults.yml` | 框架常量（Dubbo 协议、Jackson、Sa-Token、MyBatis Plus、Actuator、日志、Spring AI provider） | 框架作者 | 否 | 否（环境变量占位） |
-| `mate-infra-${profile}.yml` | 环境相关端点（MySQL URL、Redis 地址、RabbitMQ 凭证、MinIO、Seata、XXL-Job、Druid 连接池） | 运维团队 | 是（dev/test/prod 各一份） | 推荐使用环境变量 |
+| `mate-infra-${profile}.yml` | 环境相关端点（MySQL URL、Redis 地址、RabbitMQ 凭证、MinIO、Seata、XXL-Job、HikariCP 连接池） | 运维团队 | 是（dev/test/prod 各一份） | 推荐使用环境变量 |
 | `${app-name}-${profile}.yml` | 服务特有配置 | 开发者 | 视情况 | 否 |
 
 ## 最小服务配置示例

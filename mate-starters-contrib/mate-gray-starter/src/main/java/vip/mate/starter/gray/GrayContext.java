@@ -37,6 +37,11 @@ public final class GrayContext {
         return CONTEXT.get();
     }
 
+    /** 当前请求线程是否命中指定灰度版本（业务方法体可用于内联分支）。 */
+    public static boolean isGray(String grayVersion) {
+        return grayVersion != null && grayVersion.equals(CONTEXT.get());
+    }
+
     public static void clear() {
         CONTEXT.remove();
     }

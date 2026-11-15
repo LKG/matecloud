@@ -15,7 +15,7 @@
  */
 package vip.mate.system.admin.types.excel;
 
-import com.alibaba.excel.annotation.ExcelProperty;
+import org.apache.fesod.sheet.annotation.ExcelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

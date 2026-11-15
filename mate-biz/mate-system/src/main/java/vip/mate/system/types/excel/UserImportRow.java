@@ -15,7 +15,7 @@
  */
 package vip.mate.system.types.excel;
 
-import com.alibaba.excel.annotation.ExcelProperty;
+import org.apache.fesod.sheet.annotation.ExcelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,12 +23,12 @@ import lombok.NoArgsConstructor;
 /**
  * Flat row shape consumed by {@code POST /users/import}.
  *
- * <p>EasyExcel populates fields by matching the Chinese column headers below
+ * <p>Fesod populates fields by matching the Chinese column headers below
  * against the row-1 cells of the uploaded {@code .xlsx}. Extra columns are
  * ignored silently — that lets admins paste their own sheets as long as
  * these five headers exist somewhere (order doesn't matter either).
  *
- * <p>Validation is intentionally NOT done here with Bean Validation: EasyExcel
+ * <p>Validation is intentionally NOT done here with Bean Validation: Fesod
  * runs the row through Jackson-style binding, not the Spring validator chain,
  * so any constraints go unchecked. We re-validate every row explicitly inside
  * {@code UserCommandService.importBatch} instead — that keeps the error

@@ -181,7 +181,7 @@ public class AdminController {
         return queryService.exportRows();
     }
 
-    /** Header-only template — empty list lets EasyExcel emit just row 1. */
+    /** Header-only template — empty list lets Fesod emit just row 1. */
     @GetMapping("/import/template")
     @SaCheckPermission(Perms.ADMIN_ADD)
     @ExcelExport(fileName = "admins-import-template", dataClass = AdminImportRow.class, sheetName = "Admins")

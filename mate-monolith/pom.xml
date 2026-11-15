@@ -32,6 +32,11 @@
             <artifactId>mate-notice</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- 进程内特性灰度 (路线 B): mate.gray.enabled=true 时自动装配。 -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-gray-starter</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

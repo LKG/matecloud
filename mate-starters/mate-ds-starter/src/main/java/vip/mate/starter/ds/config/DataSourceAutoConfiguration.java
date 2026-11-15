@@ -15,7 +15,6 @@
  */
 package vip.mate.starter.ds.config;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -32,13 +31,10 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.flyway.autoconfigure.FlywayMigrationStrategy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGenerator;
-import org.springframework.core.env.Environment;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,18 +51,22 @@ import java.util.Map;
  * Auto-configuration for DataSource and MyBatis Plus.
  *
  * <p>The official MyBatis-Plus Boot 4 starter owns SqlSessionFactory and
- * binds mybatis-plus properties. This configuration contributes the Druid
- * datasource, mapper scanning, interceptor chain and field-fill handler.</p>
+ * binds mybatis-plus properties. DataSource creation is delegated to Spring
+ * Boot's own {@code DataSourceAutoConfiguration}, which provisions the
+ * HikariCP pool that ships with {@code spring-boot-starter-jdbc} (Boot 4's
+ * recommended connection pool). This configuration only contributes mapper
+ * scanning, the interceptor chain and the field-fill handler. When baomidou
+ * dynamic-datasource is enabled ({@code spring.datasource.dynamic.enabled=true}),
+ * its {@code DynamicRoutingDataSource} takes precedence and Boot backs off —
+ * this is how tenant SCHEMA / DATASOURCE isolation modes plug in (RFC-012 Part 5).</p>
  *
  * @author mateaix
  */
 @Slf4j
-// Order BEFORE Spring Boot's own DataSourceAutoConfiguration so our tuned Druid
-// bean (below) wins the @ConditionalOnMissingBean(DataSource) race — otherwise
-// Boot's DataSourceConfiguration.Generic builds a Druid from spring.datasource.type
-// but ignores the spring.datasource.druid.* pool/monitor tuning (stat/wall/slf4j).
+// DataSource creation is delegated to Spring Boot's own DataSourceAutoConfiguration
+// (HikariCP). We only order BEFORE the MyBatis-Plus auto-configs so the interceptor
+// chain below is the one MyBatis-Plus adopts (@ConditionalOnMissingBean).
 @AutoConfiguration(beforeName = {
-        "org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
         "com.baomidou.mybatisplus.autoconfigure.MybatisPlusInnerInterceptorAutoConfiguration",
         "com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration"})
 @ConditionalOnClass(SqlSessionFactory.class)
@@ -85,33 +85,6 @@ public class DataSourceAutoConfiguration {
 
     /** The legacy single shared Flyway history table (pre per-service split). */
     private static final String LEGACY_FLYWAY_TABLE = "flyway_schema_history";
-
-    /**
-     * Create a single Druid DataSource bound to spring.datasource.* properties.
-     * Uses the Druid core library without a second datasource auto-configuration.
-     *
-     * <p>Backs off when baomidou dynamic-datasource is enabled
-     * ({@code spring.datasource.dynamic.enabled=true}), in which case
-     * {@code DynamicRoutingDataSource} becomes THE datasource — this is how
-     * tenant SCHEMA / DATASOURCE isolation modes plug in (RFC-012 Part 5).
-     */
-    @Bean
-    @ConditionalOnMissingBean(DataSource.class)
-    @ConditionalOnClass(DruidDataSource.class)
-    @ConditionalOnProperty(
-            prefix = "spring.datasource.dynamic", name = "enabled",
-            havingValue = "false", matchIfMissing = true)
-    @ConfigurationProperties(prefix = "spring.datasource.druid")
-    public DruidDataSource dataSource(
-            Environment env) {
-        DruidDataSource ds = new DruidDataSource();
-        ds.setUrl(env.getProperty("spring.datasource.url"));
-        ds.setUsername(env.getProperty("spring.datasource.username"));
-        ds.setPassword(env.getProperty("spring.datasource.password"));
-        ds.setDriverClassName(env.getProperty("spring.datasource.driver-class-name",
-                "com.mysql.cj.jdbc.Driver"));
-        return ds;
-    }
 
     /**
      * Assembles the single MyBatis-Plus interceptor chain.

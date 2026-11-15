@@ -11,7 +11,7 @@ MateCloud 是一套基于 **DDD（领域驱动设计）** 的微服务脚手架�
 | Spring AI | 2.0.1 | LLM 客户端、@Tool、MCP |
 | Dubbo | 3.3.6 | RPC 框架 |
 | MyBatis Plus | 3.5.16 | ORM |
-| Sa-Token | 1.45.0 | 认证鉴权 |
+| Sa-Token | 1.46.0 | 认证鉴权 |
 | Redisson | 3.52.0 | Redis 客户端、分布式锁 |
 
 ## 设计理念

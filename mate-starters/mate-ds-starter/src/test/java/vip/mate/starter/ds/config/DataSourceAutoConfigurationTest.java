@@ -1,6 +1,5 @@
 package vip.mate.starter.ds.config;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceAutoConfiguration;
 import com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration;
@@ -11,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -47,14 +47,14 @@ class DataSourceAutoConfigurationTest {
                         "spring.datasource.url=jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1",
                         "spring.datasource.driver-class-name=org.h2.Driver",
                         "spring.datasource.username=sa", "spring.datasource.password=",
-                        "spring.datasource.druid.initial-size=0");
+                        "spring.datasource.hikari.minimum-idle=0");
     }
 
     @Test
     void officialBoot4FactoryBindsDefaultsAndRunsCrud() {
         runner().run(context -> {
             assertThat(context).hasNotFailed().hasSingleBean(SqlSessionFactory.class);
-            assertThat(context.getBean(DataSource.class)).isInstanceOf(DruidDataSource.class);
+            assertThat(context.getBean(DataSource.class)).isInstanceOf(HikariDataSource.class);
             SqlSessionFactory factory = context.getBean(SqlSessionFactory.class);
             assertThat(factory.getConfiguration().isMapUnderscoreToCamelCase()).isTrue();
             assertThat(factory.getConfiguration().isCacheEnabled()).isFalse();
@@ -104,7 +104,7 @@ class DataSourceAutoConfigurationTest {
                 "spring.datasource.dynamic.datasource.master.url=jdbc:h2:mem:dynamic_upgrade;MODE=MySQL",
                 "spring.datasource.dynamic.datasource.master.username=sa",
                 "spring.datasource.dynamic.datasource.master.driver-class-name=org.h2.Driver",
-                "spring.datasource.dynamic.datasource.master.type=com.alibaba.druid.pool.DruidDataSource")
+                "spring.datasource.dynamic.datasource.master.type=com.zaxxer.hikari.HikariDataSource")
                 .run(context -> {
                     assertThat(context).hasNotFailed().hasSingleBean(DataSource.class)
                             .hasSingleBean(SqlSessionFactory.class);

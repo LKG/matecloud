@@ -15,8 +15,8 @@
  */
 package vip.mate.system.types.excel;
 
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import org.apache.fesod.sheet.annotation.ExcelProperty;
+import org.apache.fesod.sheet.annotation.write.style.ColumnWidth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,7 +24,7 @@ import lombok.NoArgsConstructor;
 /**
  * Flat row used by the {@code GET /users/export} endpoint.
  *
- * <p>EasyExcel maps each {@code @ExcelProperty}-annotated field to a column
+ * <p>Fesod maps each {@code @ExcelProperty}-annotated field to a column
  * in declaration order; keep the column labels short (they become the header
  * row) and keep this class deliberately flat — nested objects require the
  * {@code @ContentRowHeight} trickery which isn't worth it for a demo export.

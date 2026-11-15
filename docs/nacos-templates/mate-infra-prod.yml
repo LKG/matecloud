@@ -9,30 +9,22 @@
 # IMPORTANT: Do NOT use YAML multi-document separator (---).
 # ============================================================
 
-# ---- MySQL / Druid (prod-grade pool sizes) ----
+# ---- MySQL / HikariCP (prod-grade pool sizes) ----
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:matecloud}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=true&rewriteBatchedStatements=true
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      initial-size: 20
-      min-idle: 20
-      max-active: 200
-      max-wait: 30000
-      time-between-eviction-runs-millis: 60000
-      min-evictable-idle-time-millis: 600000
-      validation-query: SELECT 1
-      test-while-idle: true
-      test-on-borrow: false
-      test-on-return: false
-      filters: stat,wall,slf4j
-      web-stat-filter:
-        enabled: false
-      stat-view-servlet:
-        enabled: false
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      pool-name: MateHikariPool
+      minimum-idle: 20
+      maximum-pool-size: 200
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
 
   # ---- Redis (prod-grade pool) ----
   data:

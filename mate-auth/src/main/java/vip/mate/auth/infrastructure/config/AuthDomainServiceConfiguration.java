@@ -13,29 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package vip.mate.system.infrastructure.config;
+package vip.mate.auth.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import vip.mate.system.domain.adapter.port.PasswordEncoderPort;
-import vip.mate.system.domain.adapter.repository.UserRepository;
-import vip.mate.system.domain.service.IUserDomainService;
-import vip.mate.system.domain.service.impl.UserDomainServiceImpl;
+import vip.mate.auth.domain.adapter.port.PasswordEncoderPort;
+import vip.mate.auth.domain.adapter.port.UserQueryPort;
+import vip.mate.auth.domain.service.IAuthDomainService;
+import vip.mate.auth.domain.service.impl.AuthDomainServiceImpl;
 
 /**
- * Wires the (framework-free) domain services of the {@code system} context as
+ * Wires the (framework-free) domain services of the {@code auth} context as
  * Spring beans. Keeping the {@code @Bean} factory here — not {@code @Service} on
  * the domain class — preserves the rule that the domain layer carries zero
- * framework dependencies.
+ * framework dependencies. Mirrors mate-system's {@code SystemDomainServiceConfiguration}.
+ *
+ * <p>Class name is module-scoped ({@code Auth...}) so it does not collide with the
+ * mate-system config of the same role when both are scanned into one context in
+ * monolith mode.
  *
  * @author mateaix
  */
 @Configuration
-public class DomainServiceConfiguration {
+public class AuthDomainServiceConfiguration {
 
     @Bean
-    public IUserDomainService userDomainService(UserRepository userRepository,
+    public IAuthDomainService authDomainService(UserQueryPort userQueryPort,
                                                 PasswordEncoderPort passwordEncoder) {
-        return new UserDomainServiceImpl(userRepository, passwordEncoder);
+        return new AuthDomainServiceImpl(userQueryPort, passwordEncoder);
     }
 }

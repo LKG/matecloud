@@ -33,7 +33,7 @@ spring:
       enabled: true
   datasource:
     dynamic:
-      # OFF by default → mate-ds-starter creates a single Druid datasource.
+      # OFF by default → Spring Boot auto-configures the single HikariCP datasource.
       # Flip to true (+ configure spring.datasource.dynamic.datasource.* and
       # mate.tenant.type=DATASOURCE/SCHEMA) to enable per-tenant DB routing.
       enabled: false

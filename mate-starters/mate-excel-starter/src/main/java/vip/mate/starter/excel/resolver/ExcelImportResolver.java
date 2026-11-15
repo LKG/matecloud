@@ -15,9 +15,9 @@
  */
 package vip.mate.starter.excel.resolver;
 
-import com.alibaba.excel.EasyExcel;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.fesod.sheet.FesodSheet;
 import org.springframework.core.MethodParameter;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.support.WebDataBinderFactory;
@@ -66,7 +66,7 @@ public class ExcelImportResolver implements HandlerMethodArgumentResolver {
         }
 
         try (InputStream is = file.getInputStream()) {
-            List<?> data = EasyExcel.read(is)
+            List<?> data = FesodSheet.read(is)
                     .head(annotation.dataClass())
                     .headRowNumber(annotation.headRowNumber())
                     .sheet()
