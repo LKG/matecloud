@@ -77,3 +77,4 @@ dist/
 .turbo/
 *.tsbuildinfo
 .vitepress/cache/
+*.ps1
