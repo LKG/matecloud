@@ -16,6 +16,7 @@
 package vip.mate.starter.satoken;
 
 import cn.dev33.satoken.SaManager;
+import cn.dev33.satoken.dao.SaTokenDao;
 import cn.dev33.satoken.stp.StpInterface;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -23,6 +24,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
@@ -42,6 +45,23 @@ public class SaTokenAutoConfiguration {
     @Bean
     public StpUserUtil stpUserUtil() {
         return new StpUserUtil();
+    }
+
+    /**
+     * Safe {@link SaTokenDao} that avoids the Redisson {@code KEEPTTL} emulation
+     * which otherwise breaks {@code StpUtil.login()} (login {@code SYSE001}) — see
+     * {@link SafeKeepTtlSaTokenDao}. Takes precedence over the library's own
+     * {@code SaTokenDaoForRedisTemplate} via {@link Primary}; the DAO builds its
+     * {@code StringRedisTemplate} from the same {@link RedisConnectionFactory} the
+     * rest of the app uses (Redisson), so wiring is otherwise unchanged.
+     */
+    @Bean
+    @Primary
+    @ConditionalOnBean(RedisConnectionFactory.class)
+    public SaTokenDao safeKeepTtlSaTokenDao(RedisConnectionFactory redisConnectionFactory) {
+        SafeKeepTtlSaTokenDao dao = new SafeKeepTtlSaTokenDao();
+        dao.init(redisConnectionFactory);
+        return dao;
     }
 
     /**

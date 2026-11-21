@@ -15,11 +15,13 @@
  */
 package vip.mate.starter.menu;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import vip.mate.api.system.menu.IRpcMenuRegistry;
 
 /**
  * Auto-configuration for startup-time menu self-registration. Active when Dubbo
@@ -33,7 +35,8 @@ import org.springframework.core.env.Environment;
 public class MenuStarterAutoConfiguration {
 
     @Bean
-    public MenuAutoRegistrar menuAutoRegistrar(Environment environment) {
-        return new MenuAutoRegistrar(environment);
+    public MenuAutoRegistrar menuAutoRegistrar(Environment environment,
+                                               ObjectProvider<IRpcMenuRegistry> localRegistry) {
+        return new MenuAutoRegistrar(environment, localRegistry);
     }
 }

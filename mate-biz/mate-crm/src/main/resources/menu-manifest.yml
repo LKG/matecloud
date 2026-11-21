@@ -1,0 +1,220 @@
+# ============================================================
+# mate-crm 菜单自描述清单 (可插拔规范 §2)
+# 启动期由 mate-menu-starter MenuAutoRegistrar 幂等注册到 mate-system,
+# code 为稳定键, 数字 id 由 mate-system 内部分配并绑定超管角色。
+# path 与 mate-ui apps/admin VIEW_MAP 注册路径一一对应。
+# ============================================================
+menus:
+  - code: crm.management
+    name: CRM
+    nameEn: CRM
+    path: /crm
+    type: M
+    icon: Briefcase
+    sort: 6
+    children:
+      # ---- 工作台/看板 ----
+      - code: crm.dashboard
+        name: 销售看板
+        nameEn: Sales Dashboard
+        path: /crm/dashboard
+        component: crm/Dashboard
+        perms: crm:dashboard:view
+        type: C
+        icon: BarChart
+        sort: 1
+      # ---- 线索 ----
+      - code: crm.lead
+        name: 线索管理
+        nameEn: Leads
+        path: /crm/leads
+        component: crm/LeadList
+        perms: crm:lead:list
+        type: C
+        icon: Lightbulb
+        sort: 2
+        children:
+          - { code: crm.lead.add, name: 线索新增, perms: crm:lead:add, type: F, sort: 1 }
+          - { code: crm.lead.edit, name: 线索编辑, perms: crm:lead:edit, type: F, sort: 2 }
+          - { code: crm.lead.delete, name: 线索删除, perms: crm:lead:delete, type: F, sort: 3 }
+          - { code: crm.lead.convert, name: 线索转化, perms: crm:lead:convert, type: F, sort: 4 }
+      # ---- 客户 ----
+      - code: crm.customer
+        name: 客户管理
+        nameEn: Customers
+        path: /crm/customers
+        component: crm/CustomerList
+        perms: crm:customer:list
+        type: C
+        icon: Users
+        sort: 3
+        children:
+          - { code: crm.customer.add, name: 客户新增, perms: crm:customer:add, type: F, sort: 1 }
+          - { code: crm.customer.edit, name: 客户编辑, perms: crm:customer:edit, type: F, sort: 2 }
+          - { code: crm.customer.delete, name: 客户删除, perms: crm:customer:delete, type: F, sort: 3 }
+          - { code: crm.customer.claim, name: 公海领取, perms: crm:customer:claim, type: F, sort: 4 }
+          - { code: crm.customer.release, name: 释放公海, perms: crm:customer:release, type: F, sort: 5 }
+          - { code: crm.customer.transfer, name: 转移客户, perms: crm:customer:transfer, type: F, sort: 6 }
+          - { code: crm.customer.export, name: 客户导出, perms: crm:customer:export, type: F, sort: 7 }
+      # ---- 客户详情(隐藏路由, 由列表跳转) ----
+      - code: crm.customer.detail
+        name: 客户详情
+        nameEn: Customer Detail
+        path: /crm/customer-detail
+        component: crm/CustomerDetail
+        perms: crm:customer:list
+        type: C
+        icon: Users
+        sort: 31
+      # ---- 联系人 ----
+      - code: crm.contact
+        name: 联系人
+        nameEn: Contacts
+        path: /crm/contacts
+        component: crm/ContactList
+        perms: crm:contact:list
+        type: C
+        icon: Contact
+        sort: 4
+        children:
+          - { code: crm.contact.add, name: 联系人新增, perms: crm:contact:add, type: F, sort: 1 }
+          - { code: crm.contact.edit, name: 联系人编辑, perms: crm:contact:edit, type: F, sort: 2 }
+          - { code: crm.contact.delete, name: 联系人删除, perms: crm:contact:delete, type: F, sort: 3 }
+      # ---- 跟进记录 ----
+      - code: crm.followup
+        name: 跟进记录
+        nameEn: Follow-ups
+        path: /crm/followups
+        component: crm/FollowUpList
+        perms: crm:followup:list
+        type: C
+        icon: MessageSquare
+        sort: 5
+        children:
+          - { code: crm.followup.add, name: 写跟进, perms: crm:followup:add, type: F, sort: 1 }
+          - { code: crm.followup.delete, name: 跟进删除, perms: crm:followup:delete, type: F, sort: 2 }
+      # ---- 商机 ----
+      - code: crm.business
+        name: 商机管理
+        nameEn: Opportunities
+        path: /crm/businesses
+        component: crm/BusinessList
+        perms: crm:business:list
+        type: C
+        icon: TrendingUp
+        sort: 6
+        children:
+          - { code: crm.business.add, name: 商机新增, perms: crm:business:add, type: F, sort: 1 }
+          - { code: crm.business.edit, name: 商机编辑, perms: crm:business:edit, type: F, sort: 2 }
+          - { code: crm.business.delete, name: 商机删除, perms: crm:business:delete, type: F, sort: 3 }
+          - { code: crm.business.stage, name: 阶段推进, perms: crm:business:stage, type: F, sort: 4 }
+      # ---- 产品 ----
+      - code: crm.product
+        name: 产品管理
+        nameEn: Products
+        path: /crm/products
+        component: crm/ProductList
+        perms: crm:product:list
+        type: C
+        icon: Package
+        sort: 7
+        children:
+          - { code: crm.product.add, name: 产品新增, perms: crm:product:add, type: F, sort: 1 }
+          - { code: crm.product.edit, name: 产品编辑, perms: crm:product:edit, type: F, sort: 2 }
+          - { code: crm.product.delete, name: 产品删除, perms: crm:product:delete, type: F, sort: 3 }
+      # ---- 合同 ----
+      - code: crm.contract
+        name: 合同管理
+        nameEn: Contracts
+        path: /crm/contracts
+        component: crm/ContractList
+        perms: crm:contract:list
+        type: C
+        icon: FileText
+        sort: 8
+        children:
+          - { code: crm.contract.add, name: 合同新增, perms: crm:contract:add, type: F, sort: 1 }
+          - { code: crm.contract.edit, name: 合同编辑, perms: crm:contract:edit, type: F, sort: 2 }
+          - { code: crm.contract.delete, name: 合同删除, perms: crm:contract:delete, type: F, sort: 3 }
+          - { code: crm.contract.submit, name: 提交审批, perms: crm:contract:submit, type: F, sort: 4 }
+          - { code: crm.contract.archive, name: 合同归档, perms: crm:contract:archive, type: F, sort: 5 }
+      # ---- 回款 ----
+      - code: crm.repayment
+        name: 回款管理
+        nameEn: Payments
+        path: /crm/repayments
+        component: crm/AcceptanceList
+        perms: crm:repayment:list
+        type: C
+        icon: Wallet
+        sort: 9
+        children:
+          - { code: crm.repayment.plan, name: 回款计划维护, perms: crm:repayment:plan, type: F, sort: 1 }
+          - { code: crm.repayment.add, name: 回款登记, perms: crm:repayment:add, type: F, sort: 2 }
+          - { code: crm.repayment.delete, name: 回款删除, perms: crm:repayment:delete, type: F, sort: 3 }
+      # ---- 发票 ----
+      - code: crm.invoice
+        name: 发票管理
+        nameEn: Invoices
+        path: /crm/invoices
+        component: crm/InvoiceList
+        perms: crm:invoice:list
+        type: C
+        icon: Receipt
+        sort: 10
+        children:
+          - { code: crm.invoice.add, name: 开票申请, perms: crm:invoice:add, type: F, sort: 1 }
+          - { code: crm.invoice.issue, name: 开票, perms: crm:invoice:issue, type: F, sort: 2 }
+          - { code: crm.invoice.void, name: 作废, perms: crm:invoice:void, type: F, sort: 3 }
+      # ---- 售后 ----
+      - code: crm.aftersale
+        name: 售后工单
+        nameEn: After-sales
+        path: /crm/aftersales
+        component: crm/AfterSaleList
+        perms: crm:aftersale:list
+        type: C
+        icon: LifeBuoy
+        sort: 11
+        children:
+          - { code: crm.aftersale.add, name: 工单创建, perms: crm:aftersale:add, type: F, sort: 1 }
+          - { code: crm.aftersale.handle, name: 工单处理, perms: crm:aftersale:handle, type: F, sort: 2 }
+          - { code: crm.aftersale.close, name: 工单关闭, perms: crm:aftersale:close, type: F, sort: 3 }
+      # ---- 审批中心 ----
+      - code: crm.approval
+        name: 审批中心
+        nameEn: Approvals
+        path: /crm/approvals
+        component: crm/ApprovalCenter
+        perms: crm:approval:list
+        type: C
+        icon: CheckSquare
+        sort: 12
+        children:
+          - { code: crm.approval.audit, name: 审批操作, perms: crm:approval:audit, type: F, sort: 1 }
+      # ---- 公海规则配置 ----
+      - code: crm.pool.config
+        name: 公海规则
+        nameEn: Pool Rules
+        path: /crm/pool-config
+        component: crm/PoolConfig
+        perms: crm:pool:config
+        type: C
+        icon: RefreshCw
+        sort: 13
+        children:
+          - { code: crm.pool.config.edit, name: 规则修改, perms: crm:pool:config:edit, type: F, sort: 1 }
+      # ---- 我的待办 ----
+      - code: crm.task
+        name: 我的待办
+        nameEn: My Tasks
+        path: /crm/tasks
+        component: crm/TaskList
+        perms: crm:task:list
+        type: C
+        icon: ClipboardList
+        sort: 14
+        children:
+          - { code: crm.task.add, name: 任务新增, perms: crm:task:add, type: F, sort: 1 }
+          - { code: crm.task.done, name: 完成任务, perms: crm:task:done, type: F, sort: 2 }
+          - { code: crm.task.delete, name: 任务删除, perms: crm:task:delete, type: F, sort: 3 }

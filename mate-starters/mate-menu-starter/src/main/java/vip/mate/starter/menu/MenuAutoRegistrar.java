@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -43,6 +44,11 @@ import java.util.List;
  * WARN and never aborts host-service startup. The upsert is idempotent, so the
  * next successful boot reconciles.</p>
  *
+ * <p>Resolution order: a local Spring {@link IRpcMenuRegistry} bean wins when
+ * present (monolith mode — Dubbo is off and mate-system lives in the same JVM,
+ * wired via {@code LocalMenuRegistryAdapter}); otherwise the call goes over
+ * the Dubbo reference (microservice mode).</p>
+ *
  * @author mateaix
  */
 @Slf4j
@@ -56,11 +62,15 @@ public class MenuAutoRegistrar implements ApplicationListener<ApplicationReadyEv
             group = RpcConstants.GROUP_SYSTEM, version = RpcConstants.VERSION)
     private IRpcMenuRegistry registry;
 
+    /** 单体模式的进程内实现 (LocalMenuRegistryAdapter); 微服务模式为空。 */
+    private final ObjectProvider<IRpcMenuRegistry> localRegistry;
+
     private final Environment environment;
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
-    public MenuAutoRegistrar(Environment environment) {
+    public MenuAutoRegistrar(Environment environment, ObjectProvider<IRpcMenuRegistry> localRegistry) {
         this.environment = environment;
+        this.localRegistry = localRegistry;
     }
 
     @Override
@@ -88,14 +98,22 @@ public class MenuAutoRegistrar implements ApplicationListener<ApplicationReadyEv
             return;
         }
 
+        // 单体优先走本地 bean; 微服务走 Dubbo 引用。
+        IRpcMenuRegistry target = localRegistry.getIfAvailable();
+        boolean local = target != null;
+        if (target == null) {
+            target = registry;
+        }
+
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                if (registry == null) {
+                if (target == null) {
                     throw new IllegalStateException("IRpcMenuRegistry reference is null (mate-system not reachable)");
                 }
-                Result<Integer> result = registry.register(moduleCode, menus);
+                Result<Integer> result = target.register(moduleCode, menus);
                 if (result != null && Boolean.TRUE.equals(result.getSuccess())) {
-                    log.info("[menu] module {} self-registered {} nodes", moduleCode, result.getData());
+                    log.info("[menu] module {} self-registered {} nodes ({})", moduleCode, result.getData(),
+                            local ? "in-process" : "dubbo");
                     return;
                 }
                 String msg = (result == null) ? "rpc returned null" : result.getMsg();

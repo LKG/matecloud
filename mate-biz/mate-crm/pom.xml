@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>vip.mate</groupId>
+        <artifactId>mate-biz</artifactId>
+        <version>5.0.8</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>mate-crm</artifactId>
+    <packaging>jar</packaging>
+    <name>mate-crm</name>
+    <description>MateCloud CRM Service - Lead/Customer/Contact/Business/Contract/Repayment/Invoice/AfterSale/Approval + AI copilot</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-ds-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-web-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-nacos-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-rpc-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-cache-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-sa-token-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>cn.dev33</groupId>
+                    <artifactId>sa-token-reactor-spring-boot3-starter</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-monitor-starter</artifactId>
+        </dependency>
+        <!-- @RateLimit / @Idempotent / @AuditLog 等安全能力 -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-security-starter</artifactId>
+        </dependency>
+        <!-- 菜单自注册 (可插拔规范 §2): 自带 menu-manifest.yml, 启动期注册到 mate-system -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-menu-starter</artifactId>
+        </dependency>
+        <!-- AI @Tool 能力 (对标 Wukong-AICRM): 客户摘要/跟进建议注册进 AiToolRegistry -->
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-ai-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-test-starter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Dual-role module: runnable service AND a library consumed by mate-monolith.
+                         classifier keeps the thin mate-crm.jar as the main (library) artifact and
+                         emits mate-crm-exec.jar as the executable fat jar for microservice deploy. -->
+                    <classifier>exec</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

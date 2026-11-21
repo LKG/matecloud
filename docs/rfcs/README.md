@@ -106,6 +106,8 @@ Wave 11: 收口        049 -> 050                     (admin 合并 + 占位补�
 | 055 | [企业培训(LMS)产品](055-lms-enterprise-training-product.md) | Proposed | 12 | 独立可售卖垂直产品；单体/微服务双版本；AI 增值包护城河 |
 | 056 | [mate-sso-starter 身份接入](056-mate-sso-starter.md) | Proposed | 12 | 企业微信/钉钉/飞书/LDAP SSO+组织同步；SPI+模板方法+六边形端口，零侵入 mate-auth |
 | 062 | [运行时动态多数据源切换](062-tenant-dynamic-datasource.md) | Proposed | 12 | DATASOURCE 模式运行时按需注册租户库；Nacos 配置+分段锁+LRU/空闲驱逐+fail-closed；对标并改进 joolun-pro 分库 |
+| **Wave 13: CRM 垂直业务** |
+| 065 | [mate-crm CRM 全流程模块](065-crm-module.md) | Done | 13 | 对标悟空 CRM：7 上下文 18 表 DDD 四层 + 15 页面 + AI 洞察/工具 + 两级审批状态机 + 公海/逾期 job；可插拔五要素 + 单体接入 |
 
 ## 量化统计（2026-04-25 RFC-052 收口后）
 

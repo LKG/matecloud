@@ -104,6 +104,30 @@ export type {
   ConversationView, MessageView, ConversationDetail, ConversationCreate,
   AgentView, McpServerView, ProviderView, ProviderRequest,
 } from './api/modules/ai'
+
+// CRM (mate-crm, RFC-065)
+export {
+  crmApi, leadApi, customerApi, contactApi, followUpApi, poolConfigApi,
+  businessApi, productApi, contractApi, repaymentApi, invoiceApi,
+  afterSaleApi, approvalApi, taskApi, statsApi, crmAiApi,
+} from './api/modules/crm'
+export type {
+  Lead, LeadCommand, LeadStatus,
+  Customer, CustomerCommand, CustomerStatus,
+  Contact, ContactCommand,
+  FollowUp, FollowUpCommand, FollowBizType,
+  PoolConfig, PoolConfigCommand,
+  Business, BusinessCommand, BusinessDetail, BusinessStage, BusinessProductLine,
+  Product, ProductCommand,
+  Contract, ContractCommand, ContractDetail, ContractStatus, ContractProductLine,
+  PaymentPlan, PaymentPlanCommand, Repayment, RepaymentCommand,
+  Invoice, InvoiceCommand,
+  AfterSale, AfterSaleCommand, AfterSaleDetail, AfterSaleLog, AfterSaleType, AfterSaleStatus,
+  Approval, ApprovalDetail, ApprovalStatus, ApprovalNode, ApprovalRecord,
+  CrmTask, TaskCommand, TaskStatus,
+  CrmDashboard, FunnelStage, MemberStat, MonthTrend,
+  CustomerInsight,
+} from './types/crm'
 // Stores
 export { useAuthStore } from './stores/auth'
 export { useAppStore } from './stores/app'

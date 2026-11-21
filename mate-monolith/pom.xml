@@ -32,6 +32,16 @@
             <artifactId>mate-notice</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-ai</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>vip.mate</groupId>
+            <artifactId>mate-crm</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- 进程内特性灰度 (路线 B): mate.gray.enabled=true 时自动装配。 -->
         <dependency>
             <groupId>vip.mate</groupId>

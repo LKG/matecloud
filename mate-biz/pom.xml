@@ -20,6 +20,7 @@
         <module>mate-system</module>
         <module>mate-notice</module>
         <module>mate-ai</module>
+        <module>mate-crm</module>
 
     </modules>
 

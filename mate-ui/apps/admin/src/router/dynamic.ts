@@ -67,6 +67,22 @@ const VIEW_MAP: Record<string, () => Promise<any>> = {
   '/ai/mcp':     () => import('@/views/ai/McpView.vue'),
   '/ai/models':  () => import('@/views/ai/ModelsView.vue'),
   '/ai/tools':   () => import('@/views/ai/ToolsView.vue'),
+  // CRM (mate-crm, paths mirror menu-manifest.yml)
+  '/crm/dashboard':      () => import('@/views/crm/Dashboard.vue'),
+  '/crm/leads':          () => import('@/views/crm/LeadList.vue'),
+  '/crm/customers':      () => import('@/views/crm/CustomerList.vue'),
+  '/crm/customer-detail': () => import('@/views/crm/CustomerDetail.vue'),
+  '/crm/contacts':       () => import('@/views/crm/ContactList.vue'),
+  '/crm/followups':      () => import('@/views/crm/FollowUpList.vue'),
+  '/crm/businesses':     () => import('@/views/crm/BusinessList.vue'),
+  '/crm/products':       () => import('@/views/crm/ProductList.vue'),
+  '/crm/contracts':      () => import('@/views/crm/ContractList.vue'),
+  '/crm/repayments':     () => import('@/views/crm/AcceptanceList.vue'),
+  '/crm/invoices':       () => import('@/views/crm/InvoiceList.vue'),
+  '/crm/aftersales':     () => import('@/views/crm/AfterSaleList.vue'),
+  '/crm/approvals':      () => import('@/views/crm/ApprovalCenter.vue'),
+  '/crm/pool-config':    () => import('@/views/crm/PoolConfig.vue'),
+  '/crm/tasks':          () => import('@/views/crm/TaskList.vue'),
 }
 
 const PlaceholderView = () => import('@/views/common/PlaceholderView.vue')

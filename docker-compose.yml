@@ -267,6 +267,37 @@ services:
     networks:
       - mate-net
 
+  mate-crm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: mate-biz/mate-crm
+    container_name: mate-crm
+    restart: unless-stopped
+    depends_on:
+      - nacos
+      - redis
+      - mysql
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      NACOS_HOST: nacos
+      NACOS_PORT: 8848
+      NACOS_USERNAME: ${NACOS_USERNAME:-nacos}
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-nacos}
+      MYSQL_HOST: mysql
+      REDIS_HOST: redis
+      RABBITMQ_HOST: rabbitmq
+      MINIO_ENDPOINT: http://minio:9000
+      # ---- CRM AI 能力(mate-ai-starter @Tool)所需模型凭据 ----
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    ports:
+      - "9070:9070"
+    networks:
+      - mate-net
+
   # ---- Monolith mode (opt-in alternative to the microservice stack above) ----
   # auth + system + notice in ONE JVM on port 9010 (same as the gateway, so the
   # frontend needs no change); no Nacos, no Dubbo, no broker.

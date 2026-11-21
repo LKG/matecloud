@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: mate-crm
+  config:
+    import:
+      - classpath:mate-defaults.yml
+      - optional:nacos:mate-infra-${spring.profiles.active:dev}.yml
+      - optional:nacos:${spring.application.name}-${spring.profiles.active:dev}.yml
+  cloud:
+    nacos:
+      discovery:
+        metadata:
+          # P2: gateway auto-builds a route from this Nacos metadata (see
+          # mate-gateway DiscoveryMetadataRouteLocator). No gateway change needed.
+          gateway-path: /api/v1/crm/**
+
+mate:
+  # Per-service Flyway history table = flyway_history_crm. Independent version
+  # line V1.6.x — globally unique against the monolith's merged history (§1).
+  module:
+    code: crm
+  crm:
+    pool:
+      # 公海自动回收 job: 开启后按 mate_crm_pool_config 的规则回收无跟进客户
+      recycle-enabled: ${CRM_POOL_RECYCLE_ENABLED:true}
+    repayment:
+      # 回款计划到期/逾期提醒 job
+      remind-enabled: ${CRM_REPAYMENT_REMIND_ENABLED:true}
+
+server:
+  port: 9070
+
+logging:
+  level:
+    vip.mate.crm: debug

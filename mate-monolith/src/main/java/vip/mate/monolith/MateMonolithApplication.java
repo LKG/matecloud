@@ -21,21 +21,23 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import vip.mate.ai.MateAiApplication;
 import vip.mate.auth.MateAuthApplication;
+import vip.mate.crm.MateCrmApplication;
 import vip.mate.notice.MateNoticeApplication;
 import vip.mate.system.MateSystemApplication;
 
 /**
- * Monolith mode entry point — runs auth + system + notice in a single JVM.
+ * Monolith mode entry point — runs auth + system + notice + ai in a single JVM.
  * Activate with: MATE_RPC_MODE=local java -jar mate-monolith-exec.jar
  * <p>
  * The explicit {@link ComponentScan} pulls every module's beans (base package
- * {@code vip.mate}) into one context. The three per-service
+ * {@code vip.mate}) into one context. The per-service
  * {@code @SpringBootApplication} classes are themselves {@code @Configuration} +
- * {@code @ComponentScan} + {@code @EnableDiscoveryClient} (mate-system adds
- * {@code @EnableAsync}); left in the scan they would re-trigger service discovery
- * and duplicate component scanning, so they are excluded — this class is the
- * single composition root. The first two filters re-declare the exclusions that
+ * {@code @ComponentScan} + {@code @EnableDiscoveryClient} (mate-system and
+ * mate-ai add {@code @EnableAsync}); left in the scan they would re-trigger service
+ * discovery and duplicate component scanning, so they are excluded — this class is
+ * the single composition root. The first two filters re-declare the exclusions that
  * {@code @SpringBootApplication}'s built-in {@code @ComponentScan} applies by
  * default (kept here because an explicit {@code @ComponentScan} replaces them).
  *
@@ -48,7 +50,9 @@ import vip.mate.system.MateSystemApplication;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
                 MateAuthApplication.class,
                 MateSystemApplication.class,
-                MateNoticeApplication.class
+                MateNoticeApplication.class,
+                MateAiApplication.class,
+                MateCrmApplication.class
         })
 })
 public class MateMonolithApplication {

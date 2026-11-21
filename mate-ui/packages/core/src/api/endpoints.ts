@@ -49,6 +49,23 @@ export const Endpoints = {
   // ── Tenant (RFC-051 / RFC-012) ──────────────────────────────────────
   tenants:      '/admin/tenants',
   tenantPackages: '/admin/tenants/packages',
+
+  // ── CRM (mate-crm, RFC-065; relative to baseURL /api/v1) ────────────
+  crmLeads:       '/crm/leads',
+  crmCustomers:   '/crm/customers',
+  crmContacts:    '/crm/contacts',
+  crmFollowUps:   '/crm/followups',
+  crmPoolConfig:  '/crm/pool-config',
+  crmBusinesses:  '/crm/businesses',
+  crmProducts:    '/crm/products',
+  crmContracts:   '/crm/contracts',
+  crmRepayments:  '/crm/repayments',
+  crmInvoices:    '/crm/invoices',
+  crmAftersales:  '/crm/aftersales',
+  crmApprovals:   '/crm/approvals',
+  crmTasks:       '/crm/tasks',
+  crmStats:       '/crm/stats',
+  crmAiInsight:   (customerId: string) => `/crm/ai/insight/${customerId}`,
 } as const
 
 export type EndpointKey = keyof typeof Endpoints
