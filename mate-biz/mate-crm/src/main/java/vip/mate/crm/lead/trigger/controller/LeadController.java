@@ -33,6 +33,7 @@ import vip.mate.crm.lead.application.command.LeadCommand;
 import vip.mate.crm.lead.application.command.LeadCommandService;
 import vip.mate.crm.lead.application.query.ILeadQueryService;
 import vip.mate.crm.lead.domain.model.entity.Lead;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.time.LocalDateTime;
 
@@ -60,6 +61,12 @@ public class LeadController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, status, source, mineOnly, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:lead:list")
+    public Result<PageResult<Lead>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

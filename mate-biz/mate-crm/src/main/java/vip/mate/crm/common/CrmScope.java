@@ -16,6 +16,7 @@
 package vip.mate.crm.common;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 
 import java.util.List;
@@ -74,6 +75,43 @@ public record CrmScope(int code, String userId, String deptId, List<String> cust
                         : customDeptIds.stream().filter(CrmScope::isSafe).toList();
                 if (!ids.isEmpty()) {
                     wrapper.in(deptCol, ids);
+                }
+            }
+            default -> { } // ALL: 不加条件
+        }
+    }
+
+    /**
+     * 非 lambda 版数据权限过滤: 用于动态条件查询(QueryWrapper 按列名)。
+     *
+     * <p>列名来自字段元数据白名单(受信任内部配置); 复用与 lambda 版一致的 code 语义。
+     *
+     * @param ownerColumn 负责人物理列名(如 owner_id)
+     * @param deptColumn  部门物理列名(如 dept_id)
+     */
+    public <T> void apply(QueryWrapper<T> wrapper, String ownerColumn, String deptColumn) {
+        switch (code) {
+            case SELF -> {
+                if (isSafe(userId)) {
+                    wrapper.eq(ownerColumn, userId);
+                }
+            }
+            case DEPT -> {
+                if (isSafe(deptId)) {
+                    wrapper.eq(deptColumn, deptId);
+                }
+            }
+            case DEPT_AND_CHILD -> {
+                if (isSafe(deptId)) {
+                    wrapper.inSql(deptColumn, "SELECT id FROM mate_dept WHERE id = '" + deptId
+                            + "' OR ancestors LIKE '" + deptId + ",%'");
+                }
+            }
+            case CUSTOM -> {
+                List<String> ids = customDeptIds == null ? List.of()
+                        : customDeptIds.stream().filter(CrmScope::isSafe).toList();
+                if (!ids.isEmpty()) {
+                    wrapper.in(deptColumn, ids);
                 }
             }
             default -> { } // ALL: 不加条件

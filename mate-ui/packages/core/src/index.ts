@@ -109,7 +109,7 @@ export type {
 export {
   crmApi, leadApi, customerApi, contactApi, followUpApi, poolConfigApi,
   businessApi, productApi, contractApi, repaymentApi, invoiceApi,
-  afterSaleApi, approvalApi, taskApi, statsApi, crmAiApi,
+  afterSaleApi, approvalApi, taskApi, statsApi, crmAiApi, queryApi,
 } from './api/modules/crm'
 export type {
   Lead, LeadCommand, LeadStatus,
@@ -127,6 +127,8 @@ export type {
   CrmTask, TaskCommand, TaskStatus,
   CrmDashboard, FunnelStage, MemberStat, MonthTrend,
   CustomerInsight,
+  AdvancedQuery, ConditionGroup, QueryCondition, QueryFieldMeta, QueryFieldOption,
+  QueryFieldType, FilterOperator, SavedFilterVO, SavedFilterRequest,
 } from './types/crm'
 // Stores
 export { useAuthStore } from './stores/auth'

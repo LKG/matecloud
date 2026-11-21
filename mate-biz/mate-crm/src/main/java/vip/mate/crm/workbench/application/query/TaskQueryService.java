@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.workbench.domain.adapter.repository.ITaskRepository;
 import vip.mate.crm.workbench.domain.model.aggregate.TaskAggregate;
 import vip.mate.crm.workbench.domain.model.entity.Task;
@@ -36,6 +37,10 @@ public class TaskQueryService {
     public PageResult<Task> page(String keyword, String status, String type, Boolean onlyMine,
                                  int pageNum, int pageSize) {
         return taskRepository.page(keyword, status, type, onlyMine, currentUserResolver.scope(), pageNum, pageSize);
+    }
+
+    public PageResult<Task> search(AdvancedQuery query) {
+        return taskRepository.search(query, currentUserResolver.scope());
     }
 
     /** 我的今日待办(含逾期)。 */

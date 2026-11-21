@@ -33,6 +33,7 @@ import vip.mate.crm.customer.application.command.ContactCommand;
 import vip.mate.crm.customer.application.command.ContactCommandService;
 import vip.mate.crm.customer.application.query.ContactQueryService;
 import vip.mate.crm.customer.domain.model.entity.Contact;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 联系人 REST 入口(/api/v1/crm/contacts)。
@@ -56,6 +57,12 @@ public class ContactController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, customerId, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:contact:list")
+    public Result<PageResult<Contact>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

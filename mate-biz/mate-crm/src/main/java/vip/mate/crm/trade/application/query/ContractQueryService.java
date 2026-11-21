@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.adapter.repository.IContractRepository;
 import vip.mate.crm.trade.domain.model.aggregate.ContractAggregate;
 import vip.mate.crm.trade.domain.model.entity.Contract;
@@ -41,6 +42,12 @@ public class ContractQueryService {
         ContractQuery query = new ContractQuery(keyword, status, customerId, ownerId,
                 currentUserResolver.scope(), pageNum, pageSize);
         PageResult<ContractAggregate> result = contractRepository.page(query);
+        List<Contract> list = result.getList().stream().map(ContractAggregate::getContract).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    public PageResult<Contract> search(AdvancedQuery query) {
+        PageResult<ContractAggregate> result = contractRepository.search(query, currentUserResolver.scope());
         List<Contract> list = result.getList().stream().map(ContractAggregate::getContract).toList();
         return PageResult.of(list, result.getTotal());
     }

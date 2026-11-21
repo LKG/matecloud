@@ -20,11 +20,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import vip.mate.base.result.PageResult;
+import vip.mate.crm.common.CrmScope;
 import vip.mate.crm.product.domain.adapter.repository.IProductRepository;
 import vip.mate.crm.product.domain.model.aggregate.ProductAggregate;
 import vip.mate.crm.product.domain.model.entity.Product;
 import vip.mate.crm.product.infrastructure.dao.ProductDao;
 import vip.mate.crm.product.infrastructure.dao.po.ProductPO;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.util.List;
 
@@ -34,6 +37,7 @@ import java.util.List;
 public class ProductRepositoryImpl implements IProductRepository {
 
     private final ProductDao productDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(ProductAggregate aggregate) {
@@ -70,6 +74,15 @@ public class ProductRepositoryImpl implements IProductRepository {
                 .orderByAsc(ProductPO::getSort).orderByDesc(ProductPO::getCreatedAt);
 
         Page<ProductPO> result = productDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<ProductAggregate> list = result.getRecords().stream()
+                .map(po -> ProductAggregate.of(toEntity(po)))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<ProductAggregate> search(AdvancedQuery query) {
+        Page<ProductPO> result = crmSearchSupport.search(productDao, "product", query, CrmScope.all(), null, null);
         List<ProductAggregate> list = result.getRecords().stream()
                 .map(po -> ProductAggregate.of(toEntity(po)))
                 .toList();

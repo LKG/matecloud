@@ -22,6 +22,7 @@ import vip.mate.crm.common.CurrentUserResolver;
 import vip.mate.crm.customer.domain.adapter.repository.IFollowUpRepository;
 import vip.mate.crm.customer.domain.model.aggregate.FollowUpAggregate;
 import vip.mate.crm.customer.domain.model.entity.FollowUp;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -43,5 +44,11 @@ public class FollowUpQueryService {
     public FollowUp findById(String id) {
         FollowUpAggregate agg = followUpRepository.findById(id);
         return agg == null ? null : agg.getFollowUp();
+    }
+
+    public PageResult<FollowUp> search(AdvancedQuery query) {
+        PageResult<FollowUpAggregate> result = followUpRepository.search(query, currentUserResolver.scope());
+        List<FollowUp> list = result.getList().stream().map(FollowUpAggregate::getFollowUp).toList();
+        return PageResult.of(list, result.getTotal());
     }
 }

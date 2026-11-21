@@ -10,6 +10,7 @@
       <MateInput v-model="query.keyword" placeholder="姓名 / 手机 / 邮箱" clearable style="width: 240px" @enter="handleSearch">
         <template #prefix><Search :size="14" /></template>
       </MateInput>
+      <CrmAdvancedFilter v-model="advGroups" module="contact" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="200" action-label="操作" empty-text="暂无联系人">
@@ -36,12 +37,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { contactApi, type Contact, type ContactCommand } from '@matecloud/core'
+import { contactApi, type Contact, type ContactCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm,
   type MateColumn, type FormSchema,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmContactList' })
 
@@ -58,18 +61,25 @@ const loading = ref(false)
 const rows = ref<Contact[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; pageNum: number; pageSize: number }>({ keyword: '', pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await contactApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await contactApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['contactName', 'mobile', 'email'],
+          groups: advGroups.value,
+        }))
+      : await contactApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; handleSearch() }
+function handleReset() { query.keyword = ''; advGroups.value = []; handleSearch() }
 
 async function handleSetPrimary(row: Contact) {
   try { await contactApi.setPrimary(row.id); MateMessage.success('已设为主联系人'); loadData() }

@@ -31,6 +31,7 @@ import vip.mate.crm.customer.domain.model.entity.Contact;
 import vip.mate.crm.customer.domain.model.entity.Customer;
 import vip.mate.crm.customer.domain.model.entity.FollowUp;
 import vip.mate.crm.customer.domain.model.valobj.CustomerQuery;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.types.exception.CrmErrorCode;
 
 import java.util.List;
@@ -53,6 +54,13 @@ public class CustomerQueryService implements ICustomerQueryService {
         CustomerQuery query = new CustomerQuery(keyword, industry, level, status, poolStatus, ownerId,
                 scope, pageNum, pageSize);
         PageResult<CustomerAggregate> result = customerRepository.page(query);
+        List<Customer> list = result.getList().stream().map(CustomerAggregate::getCustomer).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<Customer> search(AdvancedQuery query) {
+        PageResult<CustomerAggregate> result = customerRepository.search(query, currentUserResolver.scope());
         List<Customer> list = result.getList().stream().map(CustomerAggregate::getCustomer).toList();
         return PageResult.of(list, result.getTotal());
     }

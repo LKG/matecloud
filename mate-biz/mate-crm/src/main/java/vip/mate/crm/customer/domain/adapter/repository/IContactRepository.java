@@ -18,6 +18,7 @@ package vip.mate.crm.customer.domain.adapter.repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
 import vip.mate.crm.customer.domain.model.aggregate.ContactAggregate;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -37,6 +38,9 @@ public interface IContactRepository {
     void deleteById(String id);
 
     PageResult<ContactAggregate> page(String keyword, String customerId, CrmScope scope, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选): 组间 OR / 组内 AND, 叠加数据权限范围。 */
+    PageResult<ContactAggregate> search(AdvancedQuery query, CrmScope scope);
 
     /** 某客户下全部联系人(客户 360 用)。 */
     List<ContactAggregate> listByCustomerId(String customerId);

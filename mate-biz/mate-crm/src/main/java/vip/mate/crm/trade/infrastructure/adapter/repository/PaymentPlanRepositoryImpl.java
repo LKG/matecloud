@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 import vip.mate.crm.trade.domain.adapter.repository.IPaymentPlanRepository;
 import vip.mate.crm.trade.domain.model.aggregate.PaymentPlanAggregate;
 import vip.mate.crm.trade.domain.model.entity.PaymentPlan;
@@ -41,6 +43,7 @@ public class PaymentPlanRepositoryImpl implements IPaymentPlanRepository {
 
     private final PaymentPlanDao paymentPlanDao;
     private final RepaymentDao repaymentDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void savePlan(PaymentPlanAggregate aggregate) {
@@ -137,6 +140,13 @@ public class PaymentPlanRepositoryImpl implements IPaymentPlanRepository {
         wrapper.orderByDesc(RepaymentPO::getReturnTime);
 
         Page<RepaymentPO> result = repaymentDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<Repayment> list = result.getRecords().stream().map(this::toRepaymentEntity).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<Repayment> searchRepayments(AdvancedQuery query, CrmScope scope) {
+        Page<RepaymentPO> result = crmSearchSupport.search(repaymentDao, "repayment", query, scope, "owner_id", "dept_id", "return_time");
         List<Repayment> list = result.getRecords().stream().map(this::toRepaymentEntity).toList();
         return PageResult.of(list, result.getTotal());
     }

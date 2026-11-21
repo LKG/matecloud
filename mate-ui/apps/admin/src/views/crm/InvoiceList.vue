@@ -14,6 +14,7 @@
         <el-option label="已申请" :value="0" /><el-option label="已开票" :value="1" />
         <el-option label="已驳回" :value="2" /><el-option label="已作废" :value="3" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="invoice" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="240" action-label="操作" empty-text="暂无发票">
@@ -50,11 +51,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { invoiceApi, type Invoice, type InvoiceCommand } from '@matecloud/core'
+import { invoiceApi, type Invoice, type InvoiceCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmInvoiceList' })
 
@@ -77,17 +80,25 @@ const loading = ref(false)
 const rows = ref<Invoice[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; status?: number; pageNum: number; pageSize: number }>({ keyword: '', status: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await invoiceApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await invoiceApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['title', 'contractNum', 'invoiceNo'],
+          base: [{ fieldKey: 'status', operator: 'EQ', values: query.status != null ? [String(query.status)] : [] }],
+          groups: advGroups.value,
+        }))
+      : await invoiceApi.page({ ...query })
     rows.value = res.data.list; total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; advGroups.value = []; handleSearch() }
 
 const submitting = ref(false)
 

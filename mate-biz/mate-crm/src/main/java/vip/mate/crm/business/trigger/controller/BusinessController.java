@@ -33,6 +33,7 @@ import vip.mate.crm.business.application.command.BusinessCommand;
 import vip.mate.crm.business.application.command.BusinessCommandService;
 import vip.mate.crm.business.application.query.BusinessQueryService;
 import vip.mate.crm.business.domain.model.entity.Business;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 商机 REST 入口(/api/v1/crm/businesses): 漏斗阶段推进 + 赢/输单。
@@ -59,6 +60,12 @@ public class BusinessController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, stage, customerId, statusFlag, mineOnly, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:business:list")
+    public Result<PageResult<Business>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

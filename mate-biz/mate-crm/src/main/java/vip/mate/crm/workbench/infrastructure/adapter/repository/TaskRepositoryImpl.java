@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 import vip.mate.crm.workbench.domain.adapter.repository.ITaskRepository;
 import vip.mate.crm.workbench.domain.model.aggregate.TaskAggregate;
 import vip.mate.crm.workbench.domain.model.entity.Task;
@@ -38,6 +40,7 @@ import java.util.List;
 public class TaskRepositoryImpl implements ITaskRepository {
 
     private final TaskDao taskDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(TaskAggregate aggregate) {
@@ -79,6 +82,13 @@ public class TaskRepositoryImpl implements ITaskRepository {
         wrapper.orderByAsc(TaskPO::getDueTime).orderByDesc(TaskPO::getCreatedAt);
 
         Page<TaskPO> result = taskDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<Task> list = result.getRecords().stream().map(this::toEntity).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<Task> search(AdvancedQuery query, CrmScope scope) {
+        Page<TaskPO> result = crmSearchSupport.search(taskDao, "task", query, scope, "owner_id", "dept_id");
         List<Task> list = result.getRecords().stream().map(this::toEntity).toList();
         return PageResult.of(list, result.getTotal());
     }

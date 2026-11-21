@@ -68,3 +68,36 @@ $ov = Call Get '/api/v1/crm/stats/overview'
 Write-Host "OVERVIEW contractCount=$($ov.data.contractCount) contractMoney=$($ov.data.contractMoney) received=$($ov.data.receivedMoney) receivedRate=$($ov.data.receivedRate)"
 $ins = Call Get "/api/v1/crm/ai/insight/$custId"; Assert $ins 'AI-INSIGHT'
 Write-Host 'FLOW-CHECK PASS'
+
+# ── 条件查询(动态高级筛选, RFC-066) ────────────────────────────────────────
+# 组内 AND + 组间 OR + 白名单拒绝(CRMB100) + 常用筛选存/取/删。
+# 用 raw JSON 体避开 PowerShell 单元素数组序列化问题。
+function RawCall($method, $path, [string]$json) {
+  if ($json) { Invoke-RestMethod -SkipHttpErrorCheck -Method $method -Uri "$base$path" -Headers $H -ContentType 'application/json' -Body $json }
+  else { Invoke-RestMethod -SkipHttpErrorCheck -Method $method -Uri "$base$path" -Headers $H }
+}
+
+$qf = Call Get '/api/v1/crm/query-fields?module=lead'
+if (-not $qf.success -or -not $qf.data -or $qf.data.Count -lt 5) { throw "QUERY-FIELDS FAILED: $($qf | ConvertTo-Json -Compress -Depth 3)" }
+Write-Host "QUERY-FIELDS OK count=$($qf.data.Count) first=$($qf.data[0].fieldKey)/$($qf.data[0].label)"
+
+$advBody = @'
+{"groups":[{"conditions":[{"fieldKey":"leadName","operator":"LIKE","values":["闭环"]}]},{"conditions":[{"fieldKey":"source","operator":"EQ","values":["EXHIBITION"]},{"fieldKey":"createdAt","operator":"BETWEEN","values":["2026-01-01 00:00:00","2026-12-31 23:59:59"]}]}],"pageNum":1,"pageSize":10}
+'@
+$search = RawCall Post '/api/v1/crm/leads/search' $advBody; Assert $search 'ADV-SEARCH'
+
+$badBody = '{"groups":[{"conditions":[{"fieldKey":"password","operator":"EQ","values":["x"]}]}]}'
+$bad = RawCall Post '/api/v1/crm/leads/search' $badBody
+if ($bad.success -or $bad.code -ne 'CRMB100') { throw "EXPECT CRMB100, got code=$($bad.code) success=$($bad.success)" }
+Write-Host 'ADV-SEARCH-DENY OK code=CRMB100'
+
+$saveBody = @'
+{"moduleKey":"lead","name":"冒烟-展会线索","query":{"groups":[{"conditions":[{"fieldKey":"source","operator":"EQ","values":["EXHIBITION"]}]}],"pageNum":1,"pageSize":20}}
+'@
+$sf = RawCall Post '/api/v1/crm/saved-filters' $saveBody; Assert $sf 'SAVED-FILTER-SAVE'
+$sfId = $sf.data
+$lst = Call Get '/api/v1/crm/saved-filters?module=lead'
+if (-not $lst.success -or -not ($lst.data | Where-Object { $_.id -eq $sfId })) { throw 'SAVED-FILTER-LIST FAILED' }
+Write-Host "SAVED-FILTER-LIST OK count=$($lst.data.Count)"
+$del = RawCall Delete "/api/v1/crm/saved-filters/$sfId" $null; Assert $del 'SAVED-FILTER-DELETE'
+Write-Host 'QUERY-SMOKE PASS'

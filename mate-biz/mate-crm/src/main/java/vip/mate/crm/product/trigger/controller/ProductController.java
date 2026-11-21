@@ -33,6 +33,7 @@ import vip.mate.crm.product.application.command.ProductCommand;
 import vip.mate.crm.product.application.command.ProductCommandService;
 import vip.mate.crm.product.application.query.ProductQueryService;
 import vip.mate.crm.product.domain.model.entity.Product;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -59,6 +60,12 @@ public class ProductController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, category, status, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:product:list")
+    public Result<PageResult<Product>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/on-sale")

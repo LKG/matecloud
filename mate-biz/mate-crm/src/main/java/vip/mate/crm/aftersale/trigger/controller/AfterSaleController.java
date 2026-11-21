@@ -33,6 +33,7 @@ import vip.mate.crm.aftersale.application.command.AfterSaleCommand;
 import vip.mate.crm.aftersale.application.command.AfterSaleCommandService;
 import vip.mate.crm.aftersale.application.query.AfterSaleQueryService;
 import vip.mate.crm.aftersale.domain.model.entity.AfterSale;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 售后工单 REST 入口(/api/v1/crm/aftersales): 受理/处理/完成/关闭/评价。
@@ -59,6 +60,13 @@ public class AfterSaleController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, status, type, customerId, mineOnly, pageNum, pageSize));
+    }
+
+    /** 条件查询(动态高级筛选)。 */
+    @PostMapping("/search")
+    @SaCheckPermission("crm:aftersale:list")
+    public Result<PageResult<AfterSale>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

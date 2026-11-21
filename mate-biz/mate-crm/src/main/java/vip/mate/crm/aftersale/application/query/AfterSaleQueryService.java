@@ -23,6 +23,7 @@ import vip.mate.crm.aftersale.domain.model.aggregate.AfterSaleAggregate;
 import vip.mate.crm.aftersale.domain.model.entity.AfterSale;
 import vip.mate.crm.aftersale.domain.model.entity.AfterSaleLog;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -39,6 +40,10 @@ public class AfterSaleQueryService {
         String ownerId = Boolean.TRUE.equals(mineOnly) ? currentUserResolver.require().userId() : null;
         return afterSaleRepository.page(keyword, status, type, customerId, ownerId,
                 currentUserResolver.scope(), pageNum, pageSize);
+    }
+
+    public PageResult<AfterSale> search(AdvancedQuery query) {
+        return afterSaleRepository.search(query, currentUserResolver.scope());
     }
 
     public AfterSale findById(String id) {

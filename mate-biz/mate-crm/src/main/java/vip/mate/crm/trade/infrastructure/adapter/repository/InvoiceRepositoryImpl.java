@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 import vip.mate.crm.trade.domain.adapter.repository.IInvoiceRepository;
 import vip.mate.crm.trade.domain.model.aggregate.InvoiceAggregate;
 import vip.mate.crm.trade.domain.model.entity.Invoice;
@@ -35,6 +37,7 @@ import java.util.List;
 public class InvoiceRepositoryImpl implements IInvoiceRepository {
 
     private final InvoiceDao invoiceDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(InvoiceAggregate aggregate) {
@@ -74,6 +77,13 @@ public class InvoiceRepositoryImpl implements IInvoiceRepository {
         wrapper.orderByDesc(InvoicePO::getUpdatedAt);
 
         Page<InvoicePO> result = invoiceDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<Invoice> list = result.getRecords().stream().map(this::toEntity).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<Invoice> search(AdvancedQuery query, CrmScope scope) {
+        Page<InvoicePO> result = crmSearchSupport.search(invoiceDao, "invoice", query, scope, "owner_id", "dept_id", "updated_at");
         List<Invoice> list = result.getRecords().stream().map(this::toEntity).toList();
         return PageResult.of(list, result.getTotal());
     }

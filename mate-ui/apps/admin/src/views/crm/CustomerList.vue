@@ -25,6 +25,7 @@
       <el-select v-model="query.mineOnly" placeholder="范围" clearable style="width: 120px">
         <el-option label="仅我的" :value="true" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="customer" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="260" action-label="操作" empty-text="暂无客户">
@@ -69,12 +70,14 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Plus } from 'lucide-vue-next'
-import { customerApi, type Customer, type CustomerCommand } from '@matecloud/core'
+import { customerApi, type Customer, type CustomerCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateEntityCell, MateMessage, MateMessageBox,
   type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmCustomerList' })
 
@@ -113,12 +116,24 @@ const total = ref(0)
 const query = reactive<{ keyword: string; level?: string; status?: string; mineOnly?: boolean; poolStatus: number; pageNum: number; pageSize: number }>({
   keyword: '', level: undefined, status: undefined, mineOnly: undefined, poolStatus: 0, pageNum: 1, pageSize: 20,
 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   query.poolStatus = poolTab.value === 'public' ? 1 : 0
   try {
-    const res = await customerApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await customerApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['customerName', 'phone'],
+          base: [
+            { fieldKey: 'level', operator: 'EQ', values: query.level ? [query.level] : [] },
+            { fieldKey: 'status', operator: 'EQ', values: query.status ? [query.status] : [] },
+            { fieldKey: 'poolStatus', operator: 'EQ', values: [String(query.poolStatus)] },
+          ],
+          mineOnly: query.mineOnly, groups: advGroups.value,
+        }))
+      : await customerApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) {
@@ -129,7 +144,7 @@ async function loadData() {
 }
 function handleTabChange() { query.pageNum = 1; loadData() }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.level = undefined; query.status = undefined; query.mineOnly = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.level = undefined; query.status = undefined; query.mineOnly = undefined; advGroups.value = []; handleSearch() }
 
 function goDetail(row: Customer) { router.push({ path: '/crm/customer-detail', query: { id: row.id } }) }
 

@@ -25,6 +25,7 @@ import vip.mate.crm.business.domain.model.entity.Business;
 import vip.mate.crm.business.domain.model.entity.BusinessProduct;
 import vip.mate.crm.business.domain.model.valobj.BusinessQuery;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.types.exception.CrmErrorCode;
 
 import java.util.List;
@@ -50,6 +51,12 @@ public class BusinessQueryService {
     public Business findById(String id) {
         BusinessAggregate agg = businessRepository.findById(id);
         return agg == null ? null : agg.getBusiness();
+    }
+
+    public PageResult<Business> search(AdvancedQuery query) {
+        PageResult<BusinessAggregate> result = businessRepository.search(query, currentUserResolver.scope());
+        List<Business> list = result.getList().stream().map(BusinessAggregate::getBusiness).toList();
+        return PageResult.of(list, result.getTotal());
     }
 
     public BusinessDetail detail(String id) {

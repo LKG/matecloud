@@ -16,6 +16,8 @@
 package vip.mate.crm.trade.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
+import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.model.aggregate.ContractAggregate;
 import vip.mate.crm.trade.domain.model.entity.Contract;
 import vip.mate.crm.trade.domain.model.valobj.ContractQuery;
@@ -38,6 +40,9 @@ public interface IContractRepository {
     void deleteById(String id);
 
     PageResult<ContractAggregate> page(ContractQuery query);
+
+    /** 条件查询(动态高级筛选)。 */
+    PageResult<ContractAggregate> search(AdvancedQuery query, CrmScope scope);
 
     /** 合同编号查重(排除自身)。 */
     boolean existsByNum(String contractNum, String excludeId);

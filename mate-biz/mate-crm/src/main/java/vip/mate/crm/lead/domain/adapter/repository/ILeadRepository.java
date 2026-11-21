@@ -16,8 +16,10 @@
 package vip.mate.crm.lead.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
+import vip.mate.crm.common.CrmScope;
 import vip.mate.crm.lead.domain.model.aggregate.LeadAggregate;
 import vip.mate.crm.lead.domain.model.valobj.LeadQuery;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 线索仓储接口(domain 定义, infrastructure 实现)。
@@ -39,4 +41,7 @@ public interface ILeadRepository {
 
     /** 分页查询(条件含数据权限范围)。 */
     PageResult<LeadAggregate> page(LeadQuery query);
+
+    /** 条件查询(动态高级筛选): 组间 OR / 组内 AND, 叠加数据权限范围。 */
+    PageResult<LeadAggregate> search(AdvancedQuery query, CrmScope scope);
 }

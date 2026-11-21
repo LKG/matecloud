@@ -17,6 +17,7 @@ package vip.mate.crm.lead.application.query;
 
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.lead.domain.model.entity.Lead;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 线索读侧查询服务。
@@ -27,6 +28,9 @@ public interface ILeadQueryService {
 
     PageResult<Lead> page(String keyword, String status, String source, Boolean mineOnly,
                           int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选), 叠加当前用户数据权限。 */
+    PageResult<Lead> search(AdvancedQuery query);
 
     Lead findById(String id);
 }

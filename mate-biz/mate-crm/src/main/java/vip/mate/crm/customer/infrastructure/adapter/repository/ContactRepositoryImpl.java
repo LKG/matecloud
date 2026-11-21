@@ -27,6 +27,8 @@ import vip.mate.crm.customer.domain.model.aggregate.ContactAggregate;
 import vip.mate.crm.customer.domain.model.entity.Contact;
 import vip.mate.crm.customer.infrastructure.dao.ContactDao;
 import vip.mate.crm.customer.infrastructure.dao.po.ContactPO;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.util.List;
 
@@ -36,6 +38,7 @@ import java.util.List;
 public class ContactRepositoryImpl implements IContactRepository {
 
     private final ContactDao contactDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(ContactAggregate aggregate) {
@@ -72,6 +75,15 @@ public class ContactRepositoryImpl implements IContactRepository {
         wrapper.orderByDesc(ContactPO::getIsPrimary).orderByDesc(ContactPO::getCreatedAt);
 
         Page<ContactPO> result = contactDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<ContactAggregate> list = result.getRecords().stream()
+                .map(po -> ContactAggregate.of(toEntity(po)))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<ContactAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<ContactPO> result = crmSearchSupport.search(contactDao, "contact", query, scope, "owner_id", "dept_id");
         List<ContactAggregate> list = result.getRecords().stream()
                 .map(po -> ContactAggregate.of(toEntity(po)))
                 .toList();

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vip.mate.base.result.PageResult;
 import vip.mate.base.result.Result;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.application.command.PaymentPlanCommand;
 import vip.mate.crm.trade.application.command.PaymentPlanCommandService;
 import vip.mate.crm.trade.application.command.RepaymentCommand;
@@ -105,6 +106,13 @@ public class AcceptanceController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(planQueryService.pageRepayments(keyword, contractId, mineOnly, pageNum, pageSize));
+    }
+
+    /** 回款记录条件查询(动态高级筛选)。 */
+    @PostMapping("/search")
+    @SaCheckPermission("crm:repayment:list")
+    public Result<PageResult<Repayment>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(planQueryService.searchRepayments(query));
     }
 
     @GetMapping("/plans/{planId}/records")

@@ -18,6 +18,7 @@
         <el-option label="跟进" value="FOLLOW" /><el-option label="回访" value="RETURN_VISIT" />
         <el-option label="会议" value="MEETING" /><el-option label="其他" value="OTHER" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="task" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="200" action-label="操作" empty-text="暂无待办">
@@ -50,11 +51,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { taskApi, type CrmTask, type TaskCommand } from '@matecloud/core'
+import { taskApi, type CrmTask, type TaskCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmTaskList' })
 
@@ -80,18 +83,29 @@ const total = ref(0)
 const query = reactive<{ keyword: string; status?: string; type?: string; onlyMine: boolean; onlyOpen?: boolean; pageNum: number; pageSize: number }>({
   keyword: '', status: undefined, type: undefined, onlyMine: true, onlyOpen: true, pageNum: 1, pageSize: 20,
 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await taskApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await taskApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['title', 'bizName', 'content'],
+          base: [
+            { fieldKey: 'status', operator: 'EQ', values: query.status ? [query.status] : [] },
+            { fieldKey: 'type', operator: 'EQ', values: query.type ? [query.type] : [] },
+          ],
+          mineOnly: query.onlyMine, groups: advGroups.value,
+        }))
+      : await taskApi.page({ ...query })
     rows.value = res.data.list.map((r) => ({ ...r }))
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; query.onlyOpen = onlyOpen.value ? true : undefined; if (onlyOpen.value) query.status = 'OPEN'; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; query.type = undefined; onlyOpen.value = true; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; query.type = undefined; onlyOpen.value = true; advGroups.value = []; handleSearch() }
 
 async function handleDone(row: CrmTask) {
   try { await taskApi.complete(row.id); MateMessage.success('已完成'); loadData() }

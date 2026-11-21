@@ -17,6 +17,7 @@
       <el-select v-model="query.stage" placeholder="阶段" clearable style="width: 140px">
         <el-option v-for="s in STAGES" :key="s.value" :label="s.label" :value="s.value" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="business" @search="handleSearch" />
     </MateSearchBar>
 
     <!-- 列表视图 -->
@@ -72,11 +73,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { businessApi, contractApi, type Business, type BusinessCommand, type BusinessProductLine, type BusinessStage } from '@matecloud/core'
+import { businessApi, contractApi, type Business, type BusinessCommand, type BusinessProductLine, type BusinessStage, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmBusinessList' })
 
@@ -106,6 +109,7 @@ const loading = ref(false)
 const rows = ref<Business[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; stage?: string; pageNum: number; pageSize: number }>({ keyword: '', stage: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 const grouped = computed<Record<string, Business[]>>(() => {
   const g: Record<string, Business[]> = {}
@@ -117,14 +121,21 @@ async function loadData() {
   loading.value = true
   try {
     const params = view.value === 'board' ? { ...query, pageNum: 1, pageSize: 200 } : { ...query }
-    const res = await businessApi.page(params)
+    const res = hasValidAdvanced(advGroups.value)
+      ? await businessApi.search(buildAdvancedQuery({
+          pageNum: params.pageNum, pageSize: params.pageSize,
+          kw: query.keyword, kwFields: ['businessName', 'customerName'],
+          base: [{ fieldKey: 'stage', operator: 'EQ', values: query.stage ? [query.stage] : [] }],
+          groups: advGroups.value,
+        }))
+      : await businessApi.page(params)
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.stage = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.stage = undefined; advGroups.value = []; handleSearch() }
 
 async function handleAdvance(row: Business) {
   try { await businessApi.advance(row.id); MateMessage.success('已推进到下一阶段'); loadData() }

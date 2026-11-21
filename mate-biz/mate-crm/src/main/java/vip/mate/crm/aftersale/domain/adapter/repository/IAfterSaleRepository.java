@@ -19,6 +19,7 @@ import vip.mate.base.result.PageResult;
 import vip.mate.crm.aftersale.domain.model.aggregate.AfterSaleAggregate;
 import vip.mate.crm.aftersale.domain.model.entity.AfterSale;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 售后工单仓储接口(聚合含处理日志)。
@@ -37,4 +38,7 @@ public interface IAfterSaleRepository {
 
     PageResult<AfterSale> page(String keyword, String status, String type, String customerId,
                                String ownerId, CrmScope scope, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选)。 */
+    PageResult<AfterSale> search(AdvancedQuery query, CrmScope scope);
 }

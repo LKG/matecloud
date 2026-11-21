@@ -17,6 +17,7 @@ package vip.mate.crm.trade.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.model.aggregate.PaymentPlanAggregate;
 import vip.mate.crm.trade.domain.model.entity.PaymentPlan;
 import vip.mate.crm.trade.domain.model.entity.Repayment;
@@ -57,6 +58,9 @@ public interface IPaymentPlanRepository {
 
     PageResult<Repayment> pageRepayments(String keyword, String contractId, String ownerId,
                                          CrmScope scope, int pageNum, int pageSize);
+
+    /** 回款记录条件查询(动态高级筛选)。 */
+    PageResult<Repayment> searchRepayments(AdvancedQuery query, CrmScope scope);
 
     List<Repayment> listRepaymentsByPlan(String planId);
 }

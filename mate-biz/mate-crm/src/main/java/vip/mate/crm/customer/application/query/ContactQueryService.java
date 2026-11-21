@@ -22,6 +22,7 @@ import vip.mate.crm.common.CurrentUserResolver;
 import vip.mate.crm.customer.domain.adapter.repository.IContactRepository;
 import vip.mate.crm.customer.domain.model.aggregate.ContactAggregate;
 import vip.mate.crm.customer.domain.model.entity.Contact;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -43,5 +44,11 @@ public class ContactQueryService {
     public Contact findById(String id) {
         ContactAggregate agg = contactRepository.findById(id);
         return agg == null ? null : agg.getContact();
+    }
+
+    public PageResult<Contact> search(AdvancedQuery query) {
+        PageResult<ContactAggregate> result = contactRepository.search(query, currentUserResolver.scope());
+        List<Contact> list = result.getList().stream().map(ContactAggregate::getContact).toList();
+        return PageResult.of(list, result.getTotal());
     }
 }

@@ -23,6 +23,7 @@ import vip.mate.crm.lead.domain.adapter.repository.ILeadRepository;
 import vip.mate.crm.lead.domain.model.aggregate.LeadAggregate;
 import vip.mate.crm.lead.domain.model.entity.Lead;
 import vip.mate.crm.lead.domain.model.valobj.LeadQuery;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -41,6 +42,13 @@ public class LeadQueryService implements ILeadQueryService {
         LeadQuery query = new LeadQuery(keyword, status, source, ownerId,
                 currentUserResolver.scope(), pageNum, pageSize);
         PageResult<LeadAggregate> result = leadRepository.page(query);
+        List<Lead> list = result.getList().stream().map(LeadAggregate::getLead).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<Lead> search(AdvancedQuery query) {
+        PageResult<LeadAggregate> result = leadRepository.search(query, currentUserResolver.scope());
         List<Lead> list = result.getList().stream().map(LeadAggregate::getLead).toList();
         return PageResult.of(list, result.getTotal());
     }

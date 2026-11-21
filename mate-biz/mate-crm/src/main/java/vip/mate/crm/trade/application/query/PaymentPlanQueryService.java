@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.adapter.repository.IPaymentPlanRepository;
 import vip.mate.crm.trade.domain.model.entity.PaymentPlan;
 import vip.mate.crm.trade.domain.model.entity.Repayment;
@@ -54,6 +55,11 @@ public class PaymentPlanQueryService {
         String ownerId = Boolean.TRUE.equals(mineOnly) ? currentUserResolver.require().userId() : null;
         return paymentPlanRepository.pageRepayments(keyword, contractId, ownerId,
                 currentUserResolver.scope(), pageNum, pageSize);
+    }
+
+    /** 回款记录条件查询(动态高级筛选)。 */
+    public PageResult<Repayment> searchRepayments(AdvancedQuery query) {
+        return paymentPlanRepository.searchRepayments(query, currentUserResolver.scope());
     }
 
     public List<Repayment> listRepaymentsByPlan(String planId) {

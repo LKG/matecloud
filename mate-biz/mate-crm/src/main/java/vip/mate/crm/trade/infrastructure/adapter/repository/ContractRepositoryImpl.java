@@ -21,6 +21,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import vip.mate.base.result.PageResult;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 import vip.mate.crm.trade.domain.adapter.repository.IContractRepository;
 import vip.mate.crm.trade.domain.model.aggregate.ContractAggregate;
 import vip.mate.crm.trade.domain.model.entity.Contract;
@@ -44,6 +46,7 @@ public class ContractRepositoryImpl implements IContractRepository {
 
     private final ContractDao contractDao;
     private final ContractProductDao contractProductDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(ContractAggregate aggregate) {
@@ -110,6 +113,15 @@ public class ContractRepositoryImpl implements IContractRepository {
         wrapper.orderByDesc(ContractPO::getUpdatedAt);
 
         Page<ContractPO> result = contractDao.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
+        List<ContractAggregate> list = result.getRecords().stream()
+                .map(po -> ContractAggregate.of(toEntity(po), null))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<ContractAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<ContractPO> result = crmSearchSupport.search(contractDao, "contract", query, scope, "owner_id", "dept_id", "updated_at");
         List<ContractAggregate> list = result.getRecords().stream()
                 .map(po -> ContractAggregate.of(toEntity(po), null))
                 .toList();

@@ -33,6 +33,7 @@ import vip.mate.crm.customer.application.command.CustomerCommand;
 import vip.mate.crm.customer.application.command.CustomerCommandService;
 import vip.mate.crm.customer.application.query.ICustomerQueryService;
 import vip.mate.crm.customer.domain.model.entity.Customer;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 客户 REST 入口(/api/v1/crm/customers): 公海/私海流转 + 客户 360。
@@ -60,6 +61,12 @@ public class CustomerController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, industry, level, status, poolStatus, mineOnly, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:customer:list")
+    public Result<PageResult<Customer>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

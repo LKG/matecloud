@@ -17,6 +17,7 @@ package vip.mate.crm.trade.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.model.aggregate.InvoiceAggregate;
 import vip.mate.crm.trade.domain.model.entity.Invoice;
 
@@ -39,6 +40,9 @@ public interface IInvoiceRepository {
 
     PageResult<Invoice> page(String keyword, String contractId, Integer status,
                              String ownerId, CrmScope scope, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选)。 */
+    PageResult<Invoice> search(AdvancedQuery query, CrmScope scope);
 
     List<Invoice> listByContract(String contractId);
 }

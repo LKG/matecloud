@@ -21,6 +21,7 @@ import vip.mate.base.result.PageResult;
 import vip.mate.crm.product.domain.adapter.repository.IProductRepository;
 import vip.mate.crm.product.domain.model.aggregate.ProductAggregate;
 import vip.mate.crm.product.domain.model.entity.Product;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -40,6 +41,12 @@ public class ProductQueryService {
     public Product findById(String id) {
         ProductAggregate agg = productRepository.findById(id);
         return agg == null ? null : agg.getProduct();
+    }
+
+    public PageResult<Product> search(AdvancedQuery query) {
+        PageResult<ProductAggregate> result = productRepository.search(query);
+        List<Product> list = result.getList().stream().map(ProductAggregate::getProduct).toList();
+        return PageResult.of(list, result.getTotal());
     }
 
     public List<Product> listOnSale() {

@@ -75,7 +75,11 @@ public enum CrmErrorCode implements ErrorCode {
     TICKET_NOT_RESOLVED("CRMB082", "工单尚未解决，不能评价"),
 
     // ---- AI ----
-    AI_NOT_AVAILABLE("CRMB090", "AI 服务当前不可用");
+    AI_NOT_AVAILABLE("CRMB090", "AI 服务当前不可用"),
+
+    // ---- 条件查询(动态高级筛选) ----
+    QUERY_FIELD_NOT_ALLOWED("CRMB100", "字段不允许查询"),
+    OPERATOR_TYPE_MISMATCH("CRMB101", "算子与字段类型不匹配");
 
     private final String code;
     private final String message;

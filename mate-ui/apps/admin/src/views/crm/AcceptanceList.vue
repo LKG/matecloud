@@ -8,6 +8,8 @@
         <el-option label="待回款" :value="0" /><el-option label="部分回款" :value="1" />
         <el-option label="已结清" :value="2" /><el-option label="已逾期" :value="3" />
       </el-select>
+      <!-- 高级筛选仅作用于回款记录(mate_crm_repayment); 计划页签保持快捷栏查询 -->
+      <CrmAdvancedFilter v-model="advGroups" module="repayment" @search="handleSearch" />
     </MateSearchBar>
 
     <el-tabs v-model="tab" @tab-change="onTabChange">
@@ -60,12 +62,14 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
 import {
-  repaymentApi, type PaymentPlan, type PaymentPlanCommand, type Repayment, type RepaymentCommand,
+  repaymentApi, type PaymentPlan, type PaymentPlanCommand, type Repayment, type RepaymentCommand, type ConditionGroup,
 } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmAcceptanceList' })
 
@@ -100,6 +104,7 @@ const plans = ref<PaymentPlan[]>([])
 const records = ref<Repayment[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; status?: number; pageNum: number; pageSize: number }>({ keyword: '', status: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
@@ -108,7 +113,13 @@ async function loadData() {
       const res = await repaymentApi.pagePlans({ ...query })
       plans.value = res.data.list; total.value = res.data.total
     } else {
-      const res = await repaymentApi.pageRepayments({ keyword: query.keyword, pageNum: query.pageNum, pageSize: query.pageSize })
+      const res = hasValidAdvanced(advGroups.value)
+        ? await repaymentApi.searchRecords(buildAdvancedQuery({
+            pageNum: query.pageNum, pageSize: query.pageSize,
+            kw: query.keyword, kwFields: ['number', 'contractNum'],
+            groups: advGroups.value,
+          }))
+        : await repaymentApi.pageRepayments({ keyword: query.keyword, pageNum: query.pageNum, pageSize: query.pageSize })
       records.value = res.data.list; total.value = res.data.total
     }
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
@@ -116,7 +127,7 @@ async function loadData() {
 }
 function onTabChange() { query.pageNum = 1; query.status = undefined; loadData() }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; advGroups.value = []; handleSearch() }
 
 const submitting = ref(false)
 

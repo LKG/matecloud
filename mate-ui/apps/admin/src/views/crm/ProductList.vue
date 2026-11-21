@@ -13,6 +13,7 @@
       <el-select v-model="query.status" placeholder="状态" clearable style="width: 120px">
         <el-option label="上架" :value="1" /><el-option label="下架" :value="0" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="product" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="220" action-label="操作" empty-text="暂无产品">
@@ -39,11 +40,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { productApi, type Product, type ProductCommand } from '@matecloud/core'
+import { productApi, type Product, type ProductCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm, type MateColumn, type FormSchema,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmProductList' })
 
@@ -60,18 +63,26 @@ const loading = ref(false)
 const rows = ref<Product[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; status?: number; pageNum: number; pageSize: number }>({ keyword: '', status: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await productApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await productApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['productName', 'productCode'],
+          base: [{ fieldKey: 'status', operator: 'EQ', values: query.status != null ? [String(query.status)] : [] }],
+          groups: advGroups.value,
+        }))
+      : await productApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; advGroups.value = []; handleSearch() }
 
 async function handleToggle(row: Product) {
   try { await productApi.switchStatus(row.id, row.status === 1 ? 0 : 1); MateMessage.success('操作成功'); loadData() }

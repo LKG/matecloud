@@ -18,6 +18,8 @@ package vip.mate.crm.business.domain.adapter.repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.business.domain.model.aggregate.BusinessAggregate;
 import vip.mate.crm.business.domain.model.valobj.BusinessQuery;
+import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -37,6 +39,9 @@ public interface IBusinessRepository {
     void deleteById(String id);
 
     PageResult<BusinessAggregate> page(BusinessQuery query);
+
+    /** 条件查询(动态高级筛选): 组间 OR / 组内 AND, 叠加数据权限范围。 */
+    PageResult<BusinessAggregate> search(AdvancedQuery query, CrmScope scope);
 
     /** 某客户下的商机(客户 360 用)。 */
     List<BusinessAggregate> listByCustomerId(String customerId);

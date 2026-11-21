@@ -16,6 +16,7 @@
       <el-select v-model="query.mineOnly" placeholder="范围" clearable style="width: 120px">
         <el-option label="仅我的" :value="true" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="contract" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="280" action-label="操作" empty-text="暂无合同">
@@ -77,11 +78,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { contractApi, approvalApi, type Contract, type ContractCommand, type ContractDetail, type ContractStatus, type ContractProductLine } from '@matecloud/core'
+import { contractApi, approvalApi, type Contract, type ContractCommand, type ContractDetail, type ContractStatus, type ContractProductLine, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateDrawer, MateForm, MateMessage, MateInlineConfirm, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmContractList' })
 
@@ -111,18 +114,26 @@ const loading = ref(false)
 const rows = ref<Contract[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; status?: string; mineOnly?: boolean; pageNum: number; pageSize: number }>({ keyword: '', status: undefined, mineOnly: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await contractApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await contractApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['contractName', 'contractNum', 'customerName'],
+          base: [{ fieldKey: 'status', operator: 'EQ', values: query.status ? [query.status] : [] }],
+          mineOnly: query.mineOnly, groups: advGroups.value,
+        }))
+      : await contractApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; query.mineOnly = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; query.mineOnly = undefined; advGroups.value = []; handleSearch() }
 
 async function handleSubmitApproval(row: Contract) {
   // 编排入口在 approval 上下文: 建审批实例 + 合同转 PENDING (contractApi.submit 仅状态迁移)

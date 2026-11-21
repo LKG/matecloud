@@ -17,6 +17,7 @@
         <el-option label="投诉" value="COMPLAINT" /><el-option label="报修" value="REPAIR" />
         <el-option label="咨询" value="CONSULT" /><el-option label="服务" value="SERVICE" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="aftersale" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="120" action-label="操作" empty-text="暂无工单">
@@ -70,11 +71,13 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { afterSaleApi, type AfterSale, type AfterSaleCommand, type AfterSaleDetail } from '@matecloud/core'
+import { afterSaleApi, type AfterSale, type AfterSaleCommand, type AfterSaleDetail, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateDrawer, MateForm, MateMessage, MateMessageBox, type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmAfterSaleList' })
 
@@ -105,15 +108,28 @@ const loading = ref(false)
 const rows = ref<AfterSale[]>([])
 const total = ref(0)
 const query = reactive<{ keyword: string; status?: string; type?: string; pageNum: number; pageSize: number }>({ keyword: '', status: undefined, type: undefined, pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
-  try { const res = await afterSaleApi.page({ ...query }); rows.value = res.data.list; total.value = res.data.total }
-  catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
+  try {
+    const res = hasValidAdvanced(advGroups.value)
+      ? await afterSaleApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['title', 'ticketNo', 'customerName'],
+          base: [
+            { fieldKey: 'status', operator: 'EQ', values: query.status ? [query.status] : [] },
+            { fieldKey: 'type', operator: 'EQ', values: query.type ? [query.type] : [] },
+          ],
+          groups: advGroups.value,
+        }))
+      : await afterSaleApi.page({ ...query })
+    rows.value = res.data.list; total.value = res.data.total
+  } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; query.type = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; query.type = undefined; advGroups.value = []; handleSearch() }
 
 const submitting = ref(false)
 const dialogVisible = ref(false)

@@ -17,6 +17,7 @@ package vip.mate.crm.product.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.product.domain.model.aggregate.ProductAggregate;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -36,6 +37,9 @@ public interface IProductRepository {
     void deleteById(String id);
 
     PageResult<ProductAggregate> page(String keyword, String category, Integer status, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选); 产品为共享目录, 无数据权限维度。 */
+    PageResult<ProductAggregate> search(AdvancedQuery query);
 
     /** 上架产品简表(商机/合同选品用)。 */
     List<ProductAggregate> listOnSale();

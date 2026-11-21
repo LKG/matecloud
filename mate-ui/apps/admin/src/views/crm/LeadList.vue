@@ -18,6 +18,7 @@
       <el-select v-model="query.mineOnly" placeholder="范围" clearable style="width: 120px">
         <el-option label="仅我的" :value="true" />
       </el-select>
+      <CrmAdvancedFilter v-model="advGroups" module="lead" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="240" action-label="操作" empty-text="暂无线索">
@@ -45,12 +46,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Search, Plus } from 'lucide-vue-next'
-import { leadApi, type Lead, type LeadCommand } from '@matecloud/core'
+import { leadApi, type Lead, type LeadCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar,
   MatePagination, MateDialog, MateForm, MateMessage, MateInlineConfirm,
   type MateColumn, type FormSchema, type TagVariantProps,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmLeadList' })
 
@@ -75,11 +78,19 @@ const total = ref(0)
 const query = reactive<{ keyword: string; status?: string; mineOnly?: boolean; pageNum: number; pageSize: number }>({
   keyword: '', status: undefined, mineOnly: undefined, pageNum: 1, pageSize: 20,
 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await leadApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await leadApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          kw: query.keyword, kwFields: ['leadName', 'contactName', 'mobile'],
+          base: [{ fieldKey: 'status', operator: 'EQ', values: query.status ? [query.status] : [] }],
+          mineOnly: query.mineOnly, groups: advGroups.value,
+        }))
+      : await leadApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) {
@@ -89,7 +100,7 @@ async function loadData() {
   }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.keyword = ''; query.status = undefined; query.mineOnly = undefined; handleSearch() }
+function handleReset() { query.keyword = ''; query.status = undefined; query.mineOnly = undefined; advGroups.value = []; handleSearch() }
 
 async function handleConvert(row: Lead) {
   try {

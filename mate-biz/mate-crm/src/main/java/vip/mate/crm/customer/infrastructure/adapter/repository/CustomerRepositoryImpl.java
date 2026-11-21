@@ -27,6 +27,8 @@ import vip.mate.crm.customer.domain.model.entity.Customer;
 import vip.mate.crm.customer.domain.model.valobj.CustomerQuery;
 import vip.mate.crm.customer.infrastructure.dao.CustomerDao;
 import vip.mate.crm.customer.infrastructure.dao.po.CustomerPO;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +39,7 @@ import java.util.List;
 public class CustomerRepositoryImpl implements ICustomerRepository {
 
     private final CustomerDao customerDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(CustomerAggregate aggregate) {
@@ -81,6 +84,15 @@ public class CustomerRepositoryImpl implements ICustomerRepository {
         wrapper.orderByDesc(CustomerPO::getUpdatedAt);
 
         Page<CustomerPO> result = customerDao.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
+        List<CustomerAggregate> list = result.getRecords().stream()
+                .map(po -> CustomerAggregate.of(toEntity(po)))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<CustomerAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<CustomerPO> result = crmSearchSupport.search(customerDao, "customer", query, scope, "owner_id", "dept_id", "updated_at");
         List<CustomerAggregate> list = result.getRecords().stream()
                 .map(po -> CustomerAggregate.of(toEntity(po)))
                 .toList();

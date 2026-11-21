@@ -18,6 +18,7 @@ package vip.mate.crm.customer.domain.adapter.repository;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
 import vip.mate.crm.customer.domain.model.aggregate.FollowUpAggregate;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -35,6 +36,9 @@ public interface IFollowUpRepository {
     void deleteById(String id);
 
     PageResult<FollowUpAggregate> page(String bizType, String bizId, CrmScope scope, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选): 组间 OR / 组内 AND, 叠加数据权限范围。 */
+    PageResult<FollowUpAggregate> search(AdvancedQuery query, CrmScope scope);
 
     /** 某业务对象的跟进时间线(倒序)。 */
     List<FollowUpAggregate> listByBiz(String bizType, String bizId);

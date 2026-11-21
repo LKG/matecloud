@@ -17,6 +17,7 @@ import type {
   CrmTask, TaskCommand,
   CrmDashboard, FunnelStage, MemberStat, MonthTrend,
   CustomerInsight,
+  AdvancedQuery, QueryFieldMeta, SavedFilterVO, SavedFilterRequest,
 } from '../../types/crm'
 
 // Re-export the domain types so views can import everything from one module.
@@ -37,6 +38,8 @@ export type {
   CrmTask, TaskCommand,
   CrmDashboard, FunnelStage, MemberStat, MonthTrend,
   CustomerInsight,
+  AdvancedQuery, ConditionGroup, QueryCondition, QueryFieldMeta, QueryFieldOption,
+  QueryFieldType, FilterOperator, SavedFilterVO, SavedFilterRequest,
 } from '../../types/crm'
 
 /** Common list-page query params (relative to baseURL /api/v1). */
@@ -55,6 +58,8 @@ export const leadApi = {
   follow: (id: string, nextTime?: string) =>
     client.put<any, Result<void>>(`/crm/leads/${id}/follow`, null, { params: { nextTime } }),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/leads/${id}`),
+  /** 条件查询(动态高级筛选)。 */
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Lead>>>('/crm/leads/search', query),
 }
 
 // ── 客户 /crm/customers ──────────────────────────────────────────────────────
@@ -71,6 +76,7 @@ export const customerApi = {
   transfer: (id: string, params: { ownerId: string; ownerName?: string; deptId?: string }) =>
     client.post<any, Result<void>>(`/crm/customers/${id}/transfer`, null, { params }),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/customers/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Customer>>>('/crm/customers/search', query),
 }
 
 // ── 联系人 /crm/contacts ─────────────────────────────────────────────────────
@@ -81,6 +87,7 @@ export const contactApi = {
   update: (id: string, data: ContactCommand) => client.put<any, Result<void>>(`/crm/contacts/${id}`, data),
   setPrimary: (id: string) => client.put<any, Result<void>>(`/crm/contacts/${id}/primary`),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/contacts/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Contact>>>('/crm/contacts/search', query),
 }
 
 // ── 跟进记录 /crm/followups ──────────────────────────────────────────────────
@@ -89,6 +96,7 @@ export const followUpApi = {
   get: (id: string) => client.get<any, Result<FollowUp>>(`/crm/followups/${id}`),
   save: (data: FollowUpCommand) => client.post<any, Result<string>>('/crm/followups', data),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/followups/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<FollowUp>>>('/crm/followups/search', query),
 }
 
 // ── 公海规则 /crm/pool-config ────────────────────────────────────────────────
@@ -111,6 +119,7 @@ export const businessApi = {
   lose: (id: string, endRemark?: string) =>
     client.put<any, Result<void>>(`/crm/businesses/${id}/lose`, null, { params: { endRemark } }),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/businesses/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Business>>>('/crm/businesses/search', query),
 }
 
 // ── 产品 /crm/products ───────────────────────────────────────────────────────
@@ -123,6 +132,7 @@ export const productApi = {
   switchStatus: (id: string, status: number) =>
     client.put<any, Result<void>>(`/crm/products/${id}/status`, null, { params: { status } }),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/products/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Product>>>('/crm/products/search', query),
 }
 
 // ── 合同 /crm/contracts ──────────────────────────────────────────────────────
@@ -135,6 +145,7 @@ export const contractApi = {
   submit: (id: string) => client.put<any, Result<void>>(`/crm/contracts/${id}/submit`),
   archive: (id: string) => client.put<any, Result<void>>(`/crm/contracts/${id}/archive`),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/contracts/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Contract>>>('/crm/contracts/search', query),
 }
 
 // ── 回款 /crm/repayments (计划 + 登记) ───────────────────────────────────────
@@ -150,6 +161,8 @@ export const repaymentApi = {
     client.get<any, Result<Repayment[]>>(`/crm/repayments/plans/${planId}/records`),
   register: (data: RepaymentCommand) => client.post<any, Result<string>>('/crm/repayments', data),
   deleteRepayment: (id: string) => client.delete<any, Result<void>>(`/crm/repayments/${id}`),
+  /** 回款记录条件查询(动态高级筛选)。 */
+  searchRecords: (query: AdvancedQuery) => client.post<any, Result<PageResult<Repayment>>>('/crm/repayments/search', query),
 }
 
 // ── 发票 /crm/invoices ───────────────────────────────────────────────────────
@@ -162,6 +175,7 @@ export const invoiceApi = {
   reject: (id: string) => client.put<any, Result<void>>(`/crm/invoices/${id}/reject`),
   voidInvoice: (id: string) => client.put<any, Result<void>>(`/crm/invoices/${id}/void`),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/invoices/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<Invoice>>>('/crm/invoices/search', query),
 }
 
 // ── 售后 /crm/aftersales ─────────────────────────────────────────────────────
@@ -179,6 +193,7 @@ export const afterSaleApi = {
   rate: (id: string, rating: number, remark?: string) =>
     client.put<any, Result<void>>(`/crm/aftersales/${id}/rate`, null, { params: { rating, remark } }),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/aftersales/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<AfterSale>>>('/crm/aftersales/search', query),
 }
 
 // ── 审批 /crm/approvals ──────────────────────────────────────────────────────
@@ -205,6 +220,19 @@ export const taskApi = {
   complete: (id: string) => client.put<any, Result<void>>(`/crm/tasks/${id}/done`),
   cancel: (id: string) => client.put<any, Result<void>>(`/crm/tasks/${id}/cancel`),
   delete: (id: string) => client.delete<any, Result<void>>(`/crm/tasks/${id}`),
+  search: (query: AdvancedQuery) => client.post<any, Result<PageResult<CrmTask>>>('/crm/tasks/search', query),
+}
+
+// ── 条件查询支撑 /crm/query-fields + /crm/saved-filters ───────────────────
+export const queryApi = {
+  /** 可查字段元数据(按模块)。 */
+  fields: (module: string) => client.get<any, Result<QueryFieldMeta[]>>('/crm/query-fields', { params: { module } }),
+  /** 个人常用筛选 CRUD(按登录用户隔离)。 */
+  savedFilter: {
+    list: (module?: string) => client.get<any, Result<SavedFilterVO[]>>('/crm/saved-filters', { params: { module } }),
+    save: (data: SavedFilterRequest) => client.post<any, Result<string>>('/crm/saved-filters', data),
+    remove: (id: string) => client.delete<any, Result<void>>(`/crm/saved-filters/${id}`),
+  },
 }
 
 // ── 看板统计 /crm/stats ──────────────────────────────────────────────────────
@@ -238,4 +266,5 @@ export const crmApi = {
   task: taskApi,
   stats: statsApi,
   ai: crmAiApi,
+  query: queryApi,
 }

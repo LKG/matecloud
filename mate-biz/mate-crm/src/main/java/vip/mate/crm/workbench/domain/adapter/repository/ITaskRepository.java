@@ -17,6 +17,7 @@ package vip.mate.crm.workbench.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.workbench.domain.model.aggregate.TaskAggregate;
 import vip.mate.crm.workbench.domain.model.entity.Task;
 
@@ -39,6 +40,9 @@ public interface ITaskRepository {
 
     PageResult<Task> page(String keyword, String status, String type, Boolean onlyOpen,
                           CrmScope scope, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选)。 */
+    PageResult<Task> search(AdvancedQuery query, CrmScope scope);
 
     /** 今日待办(负责人=userId, 未完成)。 */
     List<Task> listTodayOpen(String ownerId);

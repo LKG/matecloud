@@ -12,6 +12,7 @@
         <el-option label="联系人" value="CONTACT" /><el-option label="商机" value="BUSINESS" />
       </el-select>
       <MateInput v-model="query.bizId" placeholder="业务 ID" clearable style="width: 200px" @enter="handleSearch" />
+      <CrmAdvancedFilter v-model="advGroups" module="followup" @search="handleSearch" />
     </MateSearchBar>
 
     <MateTable :columns="columns" :data="rows" :loading="loading" row-key="id" :action-width="90" action-label="操作" empty-text="暂无跟进记录">
@@ -39,12 +40,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Plus } from 'lucide-vue-next'
-import { followUpApi, type FollowUp, type FollowUpCommand } from '@matecloud/core'
+import { followUpApi, type FollowUp, type FollowUpCommand, type ConditionGroup } from '@matecloud/core'
 import {
   MatePageCard, MateTable, MateButton, MateInput, MateTag, MateSearchBar, MatePagination,
   MateDialog, MateForm, MateMessage, MateInlineConfirm,
   type MateColumn, type FormSchema,
 } from '@matecloud/ui'
+import CrmAdvancedFilter from '../../components/crm/CrmAdvancedFilter.vue'
+import { buildAdvancedQuery, hasValidAdvanced } from '../../composables/useCrmAdvancedQuery'
 
 defineOptions({ name: 'CrmFollowUpList' })
 
@@ -65,18 +68,28 @@ const loading = ref(false)
 const rows = ref<FollowUp[]>([])
 const total = ref(0)
 const query = reactive<{ bizType?: string; bizId: string; pageNum: number; pageSize: number }>({ bizType: undefined, bizId: '', pageNum: 1, pageSize: 20 })
+const advGroups = ref<ConditionGroup[]>([])
 
 async function loadData() {
   loading.value = true
   try {
-    const res = await followUpApi.page({ ...query })
+    const res = hasValidAdvanced(advGroups.value)
+      ? await followUpApi.search(buildAdvancedQuery({
+          pageNum: query.pageNum, pageSize: query.pageSize,
+          base: [
+            { fieldKey: 'bizType', operator: 'EQ', values: query.bizType ? [query.bizType] : [] },
+            { fieldKey: 'bizId', operator: 'EQ', values: query.bizId?.trim() ? [query.bizId.trim()] : [] },
+          ],
+          groups: advGroups.value,
+        }))
+      : await followUpApi.page({ ...query })
     rows.value = res.data.list
     total.value = res.data.total
   } catch (e: any) { MateMessage.error(e?.msg || '加载失败') }
   finally { loading.value = false }
 }
 function handleSearch() { query.pageNum = 1; loadData() }
-function handleReset() { query.bizType = undefined; query.bizId = ''; handleSearch() }
+function handleReset() { query.bizType = undefined; query.bizId = ''; advGroups.value = []; handleSearch() }
 
 async function handleDelete(row: FollowUp) {
   try { await followUpApi.delete(row.id); MateMessage.success('删除成功'); loadData() }

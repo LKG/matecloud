@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vip.mate.base.result.PageResult;
 import vip.mate.base.result.Result;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.application.command.ContractCommand;
 import vip.mate.crm.trade.application.command.ContractCommandService;
 import vip.mate.crm.trade.application.query.ContractQueryService;
@@ -60,6 +61,13 @@ public class ContractController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(keyword, status, customerId, mineOnly, pageNum, pageSize));
+    }
+
+    /** 条件查询(动态高级筛选)。 */
+    @PostMapping("/search")
+    @SaCheckPermission("crm:contract:list")
+    public Result<PageResult<Contract>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

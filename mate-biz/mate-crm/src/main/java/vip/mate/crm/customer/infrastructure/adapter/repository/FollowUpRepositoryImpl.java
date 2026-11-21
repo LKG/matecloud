@@ -26,6 +26,8 @@ import vip.mate.crm.customer.domain.model.aggregate.FollowUpAggregate;
 import vip.mate.crm.customer.domain.model.entity.FollowUp;
 import vip.mate.crm.customer.infrastructure.dao.FollowUpDao;
 import vip.mate.crm.customer.infrastructure.dao.po.FollowUpPO;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.util.List;
 
@@ -35,6 +37,7 @@ import java.util.List;
 public class FollowUpRepositoryImpl implements IFollowUpRepository {
 
     private final FollowUpDao followUpDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(FollowUpAggregate aggregate) {
@@ -62,6 +65,15 @@ public class FollowUpRepositoryImpl implements IFollowUpRepository {
         wrapper.orderByDesc(FollowUpPO::getCreatedAt);
 
         Page<FollowUpPO> result = followUpDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<FollowUpAggregate> list = result.getRecords().stream()
+                .map(po -> FollowUpAggregate.of(toEntity(po)))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<FollowUpAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<FollowUpPO> result = crmSearchSupport.search(followUpDao, "followup", query, scope, "user_id", "dept_id");
         List<FollowUpAggregate> list = result.getRecords().stream()
                 .map(po -> FollowUpAggregate.of(toEntity(po)))
                 .toList();

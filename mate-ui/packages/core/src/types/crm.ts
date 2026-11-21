@@ -648,3 +648,63 @@ export interface CrmPageQuery {
   pageNum?: number
   pageSize?: number
 }
+
+// ── 条件查询(动态高级筛选, 对齐 vip.mate.crm.query) ─────────────────────
+
+/** 字段类型(与后端 FieldType 枚举一致) */
+export type QueryFieldType = 'TEXT' | 'NUMBER' | 'DATE' | 'DATETIME' | 'SELECT' | 'USER' | 'DEPT' | 'BOOLEAN'
+/** 筛选算子(与后端 FilterOperator 枚举一致) */
+export type FilterOperator = 'EQ' | 'NE' | 'LIKE' | 'GT' | 'GE' | 'LT' | 'LE' | 'IN' | 'BETWEEN' | 'IS_NULL' | 'IS_NOT_NULL'
+
+export interface QueryFieldOption {
+  value: string
+  label: string
+}
+
+/** 可查字段元数据(后端下发, 不含真实列名, 前端只认 fieldKey)。 */
+export interface QueryFieldMeta {
+  fieldKey: string
+  label: string
+  fieldType: QueryFieldType
+  operators: FilterOperator[]
+  options?: QueryFieldOption[] | null
+}
+
+export interface QueryCondition {
+  fieldKey: string
+  operator: FilterOperator
+  values?: string[]
+}
+
+/** 条件组(组内 AND, 组间 OR)。 */
+export interface ConditionGroup {
+  conditions: QueryCondition[]
+}
+
+/** 高级查询统一请求体。 */
+export interface AdvancedQuery {
+  groups?: ConditionGroup[]
+  orderField?: string
+  orderAsc?: boolean
+  mineOnly?: boolean
+  pageNum?: number
+  pageSize?: number
+}
+
+/** 个人常用筛选(后端 SavedFilterVO, query 已反序列化)。 */
+export interface SavedFilterVO {
+  id: string
+  moduleKey: string
+  name: string
+  query: AdvancedQuery
+  sort?: number
+}
+
+/** 保存/更新常用筛选请求(id 为空新增, 非空覆盖)。 */
+export interface SavedFilterRequest {
+  id?: string
+  moduleKey: string
+  name: string
+  query: AdvancedQuery
+  sort?: number
+}

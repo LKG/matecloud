@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vip.mate.base.result.PageResult;
 import vip.mate.crm.common.CurrentUserResolver;
+import vip.mate.crm.query.dto.AdvancedQuery;
 import vip.mate.crm.trade.domain.adapter.repository.IInvoiceRepository;
 import vip.mate.crm.trade.domain.model.aggregate.InvoiceAggregate;
 import vip.mate.crm.trade.domain.model.entity.Invoice;
@@ -38,6 +39,10 @@ public class InvoiceQueryService {
         String ownerId = Boolean.TRUE.equals(mineOnly) ? currentUserResolver.require().userId() : null;
         return invoiceRepository.page(keyword, contractId, status, ownerId,
                 currentUserResolver.scope(), pageNum, pageSize);
+    }
+
+    public PageResult<Invoice> search(AdvancedQuery query) {
+        return invoiceRepository.search(query, currentUserResolver.scope());
     }
 
     public Invoice findById(String id) {

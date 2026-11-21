@@ -19,6 +19,7 @@ import vip.mate.base.result.PageResult;
 import vip.mate.crm.customer.domain.model.entity.Contact;
 import vip.mate.crm.customer.domain.model.entity.Customer;
 import vip.mate.crm.customer.domain.model.entity.FollowUp;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.util.List;
 
@@ -31,6 +32,9 @@ public interface ICustomerQueryService {
 
     PageResult<Customer> page(String keyword, String industry, String level, String status,
                               Integer poolStatus, Boolean mineOnly, int pageNum, int pageSize);
+
+    /** 条件查询(动态高级筛选), 叠加当前用户数据权限。 */
+    PageResult<Customer> search(AdvancedQuery query);
 
     Customer findById(String id);
 

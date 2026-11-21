@@ -16,8 +16,10 @@
 package vip.mate.crm.customer.domain.adapter.repository;
 
 import vip.mate.base.result.PageResult;
+import vip.mate.crm.common.CrmScope;
 import vip.mate.crm.customer.domain.model.aggregate.CustomerAggregate;
 import vip.mate.crm.customer.domain.model.valobj.CustomerQuery;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,6 +40,9 @@ public interface ICustomerRepository {
     void deleteById(String id);
 
     PageResult<CustomerAggregate> page(CustomerQuery query);
+
+    /** 条件查询(动态高级筛选): 组间 OR / 组内 AND, 叠加数据权限范围。 */
+    PageResult<CustomerAggregate> search(AdvancedQuery query, CrmScope scope);
 
     /** 名称查重(排除自身); 命中返回 true。 */
     boolean existsByName(String customerName, String excludeId);

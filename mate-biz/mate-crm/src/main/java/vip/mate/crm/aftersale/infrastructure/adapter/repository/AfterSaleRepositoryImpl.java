@@ -29,6 +29,8 @@ import vip.mate.crm.aftersale.infrastructure.dao.AfterSaleLogDao;
 import vip.mate.crm.aftersale.infrastructure.dao.po.AfterSaleLogPO;
 import vip.mate.crm.aftersale.infrastructure.dao.po.AfterSalePO;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.util.List;
 import java.util.Set;
@@ -41,6 +43,7 @@ public class AfterSaleRepositoryImpl implements IAfterSaleRepository {
 
     private final AfterSaleDao afterSaleDao;
     private final AfterSaleLogDao afterSaleLogDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(AfterSaleAggregate aggregate) {
@@ -94,6 +97,13 @@ public class AfterSaleRepositoryImpl implements IAfterSaleRepository {
         wrapper.orderByDesc(AfterSalePO::getUpdatedAt);
 
         Page<AfterSalePO> result = afterSaleDao.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        List<AfterSale> list = result.getRecords().stream().map(this::toEntity).toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<AfterSale> search(AdvancedQuery query, CrmScope scope) {
+        Page<AfterSalePO> result = crmSearchSupport.search(afterSaleDao, "aftersale", query, scope, "owner_id", "dept_id", "updated_at");
         List<AfterSale> list = result.getRecords().stream().map(this::toEntity).toList();
         return PageResult.of(list, result.getTotal());
     }

@@ -108,6 +108,7 @@ Wave 11: 收口        049 -> 050                     (admin 合并 + 占位补�
 | 062 | [运行时动态多数据源切换](062-tenant-dynamic-datasource.md) | Proposed | 12 | DATASOURCE 模式运行时按需注册租户库；Nacos 配置+分段锁+LRU/空闲驱逐+fail-closed；对标并改进 joolun-pro 分库 |
 | **Wave 13: CRM 垂直业务** |
 | 065 | [mate-crm CRM 全流程模块](065-crm-module.md) | Done | 13 | 对标悟空 CRM：7 上下文 18 表 DDD 四层 + 15 页面 + AI 洞察/工具 + 两级审批状态机 + 公海/逾期 job；可插拔五要素 + 单体接入 |
+| 066 | [CRM 条件查询（动态高级筛选）](066-crm-conditional-query.md) | Done | 13 | 白名单元数据表 + 安全翻译器(组间OR/组内AND/参数绑定) + 12 列表页 search 接入 + 个人常用筛选 |
 
 ## 量化统计（2026-04-25 RFC-052 收口后）
 

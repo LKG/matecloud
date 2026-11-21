@@ -28,6 +28,8 @@ import vip.mate.crm.lead.domain.model.valobj.LeadQuery;
 import vip.mate.crm.lead.infrastructure.dao.LeadDao;
 import vip.mate.crm.lead.infrastructure.dao.po.LeadPO;
 import vip.mate.crm.lead.types.enums.LeadStatus;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.util.List;
 
@@ -37,6 +39,7 @@ import java.util.List;
 public class LeadRepositoryImpl implements ILeadRepository {
 
     private final LeadDao leadDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(LeadAggregate aggregate) {
@@ -89,6 +92,15 @@ public class LeadRepositoryImpl implements ILeadRepository {
         wrapper.orderByDesc(LeadPO::getCreatedAt);
 
         Page<LeadPO> result = leadDao.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
+        List<LeadAggregate> list = result.getRecords().stream()
+                .map(po -> LeadAggregate.of(toEntity(po)))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<LeadAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<LeadPO> result = crmSearchSupport.search(leadDao, "lead", query, scope, "owner_id", "dept_id");
         List<LeadAggregate> list = result.getRecords().stream()
                 .map(po -> LeadAggregate.of(toEntity(po)))
                 .toList();

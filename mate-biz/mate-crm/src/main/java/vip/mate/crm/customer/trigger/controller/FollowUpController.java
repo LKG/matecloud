@@ -32,6 +32,7 @@ import vip.mate.crm.customer.application.command.FollowUpCommand;
 import vip.mate.crm.customer.application.command.FollowUpCommandService;
 import vip.mate.crm.customer.application.query.FollowUpQueryService;
 import vip.mate.crm.customer.domain.model.entity.FollowUp;
+import vip.mate.crm.query.dto.AdvancedQuery;
 
 /**
  * 跟进记录 REST 入口(/api/v1/crm/followups)。
@@ -55,6 +56,12 @@ public class FollowUpController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.ok(queryService.page(bizType, bizId, pageNum, pageSize));
+    }
+
+    @PostMapping("/search")
+    @SaCheckPermission("crm:followup:list")
+    public Result<PageResult<FollowUp>> search(@RequestBody AdvancedQuery query) {
+        return Result.ok(queryService.search(query));
     }
 
     @GetMapping("/{id}")

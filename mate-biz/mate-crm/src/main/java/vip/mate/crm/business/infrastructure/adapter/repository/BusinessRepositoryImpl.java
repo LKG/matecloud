@@ -31,6 +31,8 @@ import vip.mate.crm.business.infrastructure.dao.po.BusinessPO;
 import vip.mate.crm.business.infrastructure.dao.po.BusinessProductPO;
 import vip.mate.crm.business.types.enums.BusinessStage;
 import vip.mate.crm.common.CrmScope;
+import vip.mate.crm.query.dto.AdvancedQuery;
+import vip.mate.crm.query.infrastructure.CrmSearchSupport;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +46,7 @@ public class BusinessRepositoryImpl implements IBusinessRepository {
 
     private final BusinessDao businessDao;
     private final BusinessProductDao businessProductDao;
+    private final CrmSearchSupport crmSearchSupport;
 
     @Override
     public void save(BusinessAggregate aggregate) {
@@ -110,6 +113,15 @@ public class BusinessRepositoryImpl implements IBusinessRepository {
         wrapper.orderByDesc(BusinessPO::getUpdatedAt);
 
         Page<BusinessPO> result = businessDao.selectPage(new Page<>(query.pageNum(), query.pageSize()), wrapper);
+        List<BusinessAggregate> list = result.getRecords().stream()
+                .map(po -> BusinessAggregate.of(toEntity(po), null))
+                .toList();
+        return PageResult.of(list, result.getTotal());
+    }
+
+    @Override
+    public PageResult<BusinessAggregate> search(AdvancedQuery query, CrmScope scope) {
+        Page<BusinessPO> result = crmSearchSupport.search(businessDao, "business", query, scope, "owner_id", "dept_id", "updated_at");
         List<BusinessAggregate> list = result.getRecords().stream()
                 .map(po -> BusinessAggregate.of(toEntity(po), null))
                 .toList();
